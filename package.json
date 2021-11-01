@@ -1,0 +1,14 @@
+{
+  "name": "globe-sdk",
+  "version": "0.0.1",
+  "description": "Globe Ecosystem SDK",
+  "main": "index.js",
+  "repository": "https://github.com/pws-hub/globe-sdk.git",
+  "author": "Fabrice Marlboro",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "express": "^4.17.1",
+    "request": "^2.88.2"
+  }
+}
