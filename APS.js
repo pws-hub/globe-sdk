@@ -1,6 +1,6 @@
 
-import request from 'request'
-import { Router } from 'express'
+const request = require('request')
+const Router = require('express').Router
 
 /** APS Provided Routes
  * 
@@ -23,7 +23,7 @@ const ALLOWED_VERBS = [
   'qrsignin'
 ]
 
-export default config => {
+module.exports = config => {
 
   if( !config )
     return ( req, res, next ) => next('Globe [APS]: No Authentication Configuration Found')

@@ -1,4 +1,4 @@
 
-import APS from './APS'
+const APS = require('./APS')
 
-export { APS }
+module.exports = { APS }
