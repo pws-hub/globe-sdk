@@ -13,7 +13,8 @@ const Router = require('express').Router
  * - /auth/qrsignin
  * 
  */
-const ALLOWED_VERBS = [
+const 
+ALLOWED_VERBS = [
   'signin',
   'signout',
   'verification', 
@@ -21,30 +22,33 @@ const ALLOWED_VERBS = [
   'resend/sms', 
   'create-account',
   'qrsignin'
-]
-
-module.exports = config => {
-
-  if( !config )
-    return ( req, res, next ) => next('Globe [APS]: No Authentication Configuration Found')
+],
+CONFIG = {}
     
-  function To( verb, method, body ){
-    return new Promise( ( resolve, reject ) => {
+function To( verb, method, body ){
+  return new Promise( ( resolve, reject ) => {
 
-      const headers = {
-        // 'Origin': toOrigin( req.headers.host ),
-        'X-User-Agent': config.userAgent,
-        'X-Auth-App': config.appName
-      }
-      
-      request(`${toOrigin( process.env.AUTH_REQUEST_SERVER )}/${verb}`,
-                { headers, method, form: body, json: true },
-                ( error, resp, body ) => {
-                  if( error ) return reject({ error: true, status: 'AUTH::FAILED', message: error })
-                  resolve( body )
-                } )
-    } )
-  }  
+    const headers = {
+      // 'Origin': toOrigin( req.headers.host ),
+      'X-User-Agent': CONFIG.userAgent,
+      'X-Auth-App': CONFIG.appName
+    }
+    
+    request(`${toOrigin( process.env.AUTH_REQUEST_SERVER )}/${verb}`,
+              { headers, method, form: body, json: true },
+              ( error, resp, body ) => {
+                if( error ) return reject({ error: true, status: 'AUTH::FAILED', message: error })
+                resolve( body )
+              } )
+  } )
+}
+
+function config( options ){
+
+  if( !options )
+    return ( req, res, next ) => next('Globe [APS]: No Authentication Configuration Found')
+
+  CONFIG = { ...CONFIG, ...options }
 
   return Router().all( '/auth/*', async ( req, res, next ) => {
     // Extrat after /auth/ as request verb pathname
@@ -58,6 +62,15 @@ module.exports = config => {
 
     // Send request and forward answer
     try { res.json( await To( verb, req.method, body ) ) }
-    catch( error ){ res.json({ error: true, status: 'SIGNIN::FAILED', message: 'Unexpected Error Occured' }) }
+    catch( error ){ res.json({ error: true, status: 'AUTH::FAILED', message: 'Unexpected Error Occured' }) }
   } )
+}
+
+module.exports = {
+  config, 
+  signout: async () => {
+    // Send request to signout user
+    try { return await To('signout', 'GET') }
+    catch( error ){ return { error: true, status: 'AUTH::FAILED', message: 'Unexpected Error Occured' } }
+  }
 }
