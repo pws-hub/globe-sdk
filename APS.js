@@ -24,14 +24,14 @@ const ALLOWED_VERBS = [
 ]
 let CONFIG = {}
     
-function To( verb, method, body ){
+function To( verb, method, body, headers = {} ){
   return new Promise( ( resolve, reject ) => {
 
-    const headers = {
-      // 'Origin': toOrigin( req.headers.host ),
-      'X-User-Agent': CONFIG.userAgent,
-      'X-Auth-App': CONFIG.appName
-    }
+    Object.assign( headers, {
+                              // 'Origin': toOrigin( req.headers.host ),
+                              'X-User-Agent': CONFIG.userAgent,
+                              'X-Auth-App': CONFIG.appName
+                            } )
     
     request(`${toOrigin( process.env.AUTH_REQUEST_SERVER )}/${verb}`,
               { headers, method, form: body, json: true },
@@ -67,9 +67,9 @@ function config( options ){
 
 module.exports = {
   config, 
-  signout: async () => {
+  signout: async ( ctoken, deviceId ) => {
     // Send request to signout user
-    try { return await To('signout', 'GET' ) }
+    try { return await To( 'signout', 'GET', false, { 'X-Auth-Token': ctoken, 'X-Auth-Device': deviceId } ) }
     catch( error ){ return { error: true, status: 'AUTH::FAILED', message: 'Unexpected Error Occured' } }
   }
 }
