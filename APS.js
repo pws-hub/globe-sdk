@@ -13,8 +13,7 @@ const Router = require('express').Router
  * - /auth/qrsignin
  * 
  */
-const 
-ALLOWED_VERBS = [
+const ALLOWED_VERBS = [
   'signin',
   'signout',
   'verification', 
@@ -22,8 +21,8 @@ ALLOWED_VERBS = [
   'resend/sms', 
   'create-account',
   'qrsignin'
-],
-CONFIG = {}
+]
+let CONFIG = {}
     
 function To( verb, method, body ){
   return new Promise( ( resolve, reject ) => {
@@ -45,10 +44,10 @@ function To( verb, method, body ){
 
 function config( options ){
 
-  if( !options )
+  if( typeof options != 'object' )
     return ( req, res, next ) => next('Globe [APS]: No Authentication Configuration Found')
 
-  CONFIG = { ...CONFIG, ...options }
+  Object.assign( CONFIG, options )
 
   return Router().all( '/auth/*', async ( req, res, next ) => {
     // Extrat after /auth/ as request verb pathname
@@ -70,7 +69,7 @@ module.exports = {
   config, 
   signout: async () => {
     // Send request to signout user
-    try { return await To('signout', 'GET') }
+    try { return await To('signout', 'GET' ) }
     catch( error ){ return { error: true, status: 'AUTH::FAILED', message: 'Unexpected Error Occured' } }
   }
 }
