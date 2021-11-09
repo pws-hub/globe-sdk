@@ -1,4 +1,5 @@
 
-const APS = require('./APS')
+const APS = require('./lib/APS')
+const WPS = require('./lib/WPS')
 
-module.exports = { APS }
+module.exports = { APS, WPS }
