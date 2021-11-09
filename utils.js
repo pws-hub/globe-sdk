@@ -11,12 +11,12 @@ module.exports = {
 
     let requiredFields
     switch( type ){
-      case 'APS': requiredFields = [ 'baseURL', 'appName' ]; break
-      case 'WPS': requiredFields = [ 'baseURL', 'appName' ]; break
+      case 'APS': requiredFields = [ 'baseURL', 'provider' ]; break
+      case 'WPS': requiredFields = [ 'userAgent', 'server', 'provider', 'token' ]; break
     }
     
     for( let o = 0; o < requiredFields.length; o++ ){
-      if( config.hasOwnProperty( requiredFields[o] ) )
+      if( !config.hasOwnProperty( requiredFields[o] ) )
         throw new Error(`[${type}] <${requiredFields[o]}> configuration is required`)
     }
   }
