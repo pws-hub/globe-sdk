@@ -17,7 +17,7 @@ module.exports = {
     
     for( let o = 0; o < requiredFields.length; o++ ){
       if( config.hasOwnProperty( requiredFields[o] ) )
-        throw new Error(`[${type}] <${required}> configuration is required`)
+        throw new Error(`[${type}] <${requiredFields[o]}> configuration is required`)
     }
   }
 }
