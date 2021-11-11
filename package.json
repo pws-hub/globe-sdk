@@ -1,6 +1,6 @@
 {
   "name": "globe-sdk",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Globe Ecosystem SDK",
   "main": "index.js",
   "repository": "https://github.com/pws-hub/globe-sdk.git",
