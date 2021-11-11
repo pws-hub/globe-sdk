@@ -7,9 +7,17 @@
   "author": "Fabrice Marlboro",
   "license": "MIT",
   "private": false,
+  "scripts": {
+    "test:all": "mocha test",
+    "test:wps:connect": "mocha test/wps.connect.test",
+    "test:wps:api": "mocha test/wps.api.test"
+  },
   "dependencies": {
     "express": "^4.17.1",
     "request": "^2.88.2",
     "socket.io-client": "^4.3.2"
+  },
+  "devDependencies": {
+    "mocha": "^9.1.3"
   }
 }

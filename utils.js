@@ -12,8 +12,8 @@ module.exports = {
     let requiredFields
     switch( type ){
       case 'APS': requiredFields = [ 'baseURL', 'provider' ]; break
-      case 'WPS': requiredFields = [ 'userAgent', 'server', 'provider', 'accessToken' ]; break
-      case 'MDP.DS': requiredFields = [ 'userAgent', 'server', 'host', 'accessToken', 'collections' ]; break
+      case 'WPS': requiredFields = [ 'server', 'userAgent', 'provider', 'host', 'accessToken' ]; break
+      case 'MDP.DS': requiredFields = [ 'server', 'userAgent', 'host', 'accessToken', 'collections' ]; break
       case 'MDP.DB': requiredFields = [ 'dbServer', 'dbName', 'collections' ]; break
     }
     
