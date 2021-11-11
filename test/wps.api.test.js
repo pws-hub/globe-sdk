@@ -26,6 +26,11 @@ describe('[WPS API TEST] ------------------------------------------------', func
                   }) }
       catch( error ){ console.log( error ) }
     })
+
+    it('Overwrite Existing Configuration', function(){
+      try { WPS.setConfig({ host: 'gretting.multipple.com' }) }
+      catch( error ){ console.log( error ) }
+    })
   })
   
   describe('#API Wrapper: (/lib/WPS/APIWrapper.js)', function(){
