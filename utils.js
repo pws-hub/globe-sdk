@@ -13,6 +13,7 @@ module.exports = {
     switch( type ){
       case 'APS': requiredFields = [ 'baseURL', 'provider' ]; break
       case 'WPS': requiredFields = [ 'server', 'userAgent', 'provider', 'host', 'accessToken' ]; break
+      case 'BND': requiredFields = [ 'server', 'userAgent', 'application', 'host', 'accessToken' ]; break
       case 'MDP.DS': requiredFields = [ 'server', 'userAgent', 'host', 'accessToken', 'collections' ]; break
       case 'MDP.DB': requiredFields = [ 'dbServer', 'dbName', 'collections' ]; break
     }
