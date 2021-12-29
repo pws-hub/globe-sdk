@@ -74,7 +74,7 @@ describe('[BND TEST] ------------------------------------------------', function
     it('Valid Configuration', function(){
       try { 
         api = BND({
-                    server: 'http://bnd.micros.io:10001',
+                    server: 'http://bnd.micros.io:10001/v1',
                     userAgent: 'MP.LMS/1.0',
                     application: 'Multipple',
                     host: 'hello.multipple.com',
