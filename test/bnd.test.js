@@ -4,7 +4,8 @@ const { BND } = require('../index')
 let 
 TRANSPORT_ID = '2FE-2E4E-8BCF', // Dummy transportId
 TEMPLATE_ID = '3FE-3E4E-9BCF', // Dummy templateId
-REGISTRY_ID = '4FE-4E4E-0BCF' // Dummy registryId
+REGISTRY_ID = '4FE-4E4E-0BCF', // Dummy registryId
+api
 
 const
 TRANSPORT_ATTRIBUTE = 'App-Email-Sender',
@@ -37,7 +38,7 @@ createTemplate = async function(){
     text: "{{vCode}} is your 6-digit verification code. Do not share it with 3rd party. {{refURL}}",
     scope: [ "vCode", 'refURL' ]
   },
-  { error, status, message, templateId } = await BND.template.create( payload )
+  { error, status, message, templateId } = await api.template.create( payload )
   
   templateId ?
       TEMPLATE_ID = templateId
@@ -51,7 +52,7 @@ createRegistry = async function(){
     description: 'Multiple 2.0 newsletter registry list',
     list: [ 'aurphal2012@gmail.com' ]
   },
-  { error, status, message, registryId } = await BND.registry.create( payload )
+  { error, status, message, registryId } = await api.registry.create( payload )
   
   registryId ?
       REGISTRY_ID = registryId
@@ -61,18 +62,18 @@ createRegistry = async function(){
 describe('[BND TEST] ------------------------------------------------', function(){
   describe('# Initial Configuration: (/lib/BND/index.js)', function(){
     it('Should throw "No configuratin defined" Error', function(){
-      try { BND.config() }
+      try { api = BND() }
       catch( error ){ console.log( error.message ) }
     })
 
     it('Should throw Incompleted Configuration Error', function(){
-      try { BND.config({ server: 'https://example.com' }) }
+      try { api = BND({ server: 'https://example.com' }) }
       catch( error ){ console.log( error.message ) }
     })
 
     it('Valid Configuration', function(){
       try { 
-        BND.config({
+        api = BND({
                     server: 'http://bnd.micros.io:10001',
                     userAgent: 'MP.LMS/1.0',
                     application: 'Multipple',
@@ -83,7 +84,7 @@ describe('[BND TEST] ------------------------------------------------', function
     })
 
     it('Overwrite Existing Configuration', function(){
-      try { BND.setConfig({ host: 'gretting.multipple.com' }) }
+      try { api.setConfig({ host: 'gretting.multipple.com' }) }
       catch( error ){ console.log( error ) }
     })
   })
@@ -95,7 +96,7 @@ describe('[BND TEST] ------------------------------------------------', function
     
     describe('# BND.transport.get(...)', function(){
       it('Shoud return JSON response with "transport"', async function(){
-        const { error, message, transport } = await BND.transport.get( TRANSPORT_ID )
+        const { error, message, transport } = await api.transport.get( TRANSPORT_ID )
         if( error ) throw new Error( message )
 
         console.log('Transport: ', transport )
@@ -104,7 +105,7 @@ describe('[BND TEST] ------------------------------------------------', function
     
     describe('# BND.transport.list(...)', function(){
       it('Shoud return JSON response with "results" as array', async function(){
-        const { error, message, transports } = await BND.transport.list()
+        const { error, message, transports } = await api.transport.list()
         if( error ) throw new Error( message )
 
         console.log('Transports: ', transports )
@@ -118,7 +119,7 @@ describe('[BND TEST] ------------------------------------------------', function
           attribute: 'Support-Email-Sender',
           username: 'support@multipple.com'
         },
-        { error, message, transport } = await BND.transport.update( TRANSPORT_ID, payload )
+        { error, message, transport } = await api.transport.update( TRANSPORT_ID, payload )
         if( error ) throw new Error( message )
 
         console.log('Transport: ', transport )
@@ -127,7 +128,7 @@ describe('[BND TEST] ------------------------------------------------', function
     
     describe('# BND.transport.remove(...)', function(){
       it('Shoud return JSON response with "message" as "Transport Deleted"', async function(){
-        const { error, status, message } = await BND.transport.remove( TRANSPORT_ID )
+        const { error, status, message } = await api.transport.remove( TRANSPORT_ID )
         console.log({ error, status, message })
       })
     })
@@ -140,7 +141,7 @@ describe('[BND TEST] ------------------------------------------------', function
     
     describe('# BND.template.get(...)', function(){
       it('Shoud return JSON response with "template"', async function(){
-        const { error, message, template } = await BND.template.get( TEMPLATE_ID )
+        const { error, message, template } = await api.template.get( TEMPLATE_ID )
         if( error ) throw new Error( message )
 
         console.log('Template: ', template )
@@ -149,7 +150,7 @@ describe('[BND TEST] ------------------------------------------------', function
     
     describe('# BND.template.list(...)', function(){
       it('Shoud return JSON response with "results" as array', async function(){
-        const { error, message, templates } = await BND.template.list()
+        const { error, message, templates } = await api.template.list()
         if( error ) throw new Error( message )
 
         console.log('Templates: ', templates )
@@ -163,7 +164,7 @@ describe('[BND TEST] ------------------------------------------------', function
           html: "<html><body><p><strong>{{vCode}}</strong> is your VendOne 6-digit verification code. Do not share it with 3rd party.</p><a href='{{refURL}}'>Check reference</a><br><br><em>{{domain}}</em></body></html>",
           scope: [ "vCode", "refURL", "domain" ]
         },
-        { error, message, template } = await BND.template.update( TEMPLATE_ID, payload )
+        { error, message, template } = await api.template.update( TEMPLATE_ID, payload )
         if( error ) throw new Error( message )
 
         console.log('Template: ', template )
@@ -172,7 +173,7 @@ describe('[BND TEST] ------------------------------------------------', function
     
     describe('# BND.template.remove(...)', function(){
       it('Shoud return JSON response with "message" as "Template Deleted"', async function(){
-        const { error, status, message } = await BND.template.remove( TEMPLATE_ID )
+        const { error, status, message } = await api.template.remove( TEMPLATE_ID )
         console.log({ error, status, message })
       })
     })
@@ -185,7 +186,7 @@ describe('[BND TEST] ------------------------------------------------', function
     
     describe('# BND.registry.get(...)', function(){
       it('Shoud return JSON response with "registry"', async function(){
-        const { error, message, registry } = await BND.registry.get( REGISTRY_ID )
+        const { error, message, registry } = await api.registry.get( REGISTRY_ID )
         if( error ) throw new Error( message )
 
         console.log('Registry: ', registry )
@@ -194,7 +195,7 @@ describe('[BND TEST] ------------------------------------------------', function
     
     describe('# BND.registry.list(...)', function(){
       it('Shoud return JSON response with "results" as array', async function(){
-        const { error, message, registries } = await BND.registry.list()
+        const { error, message, registries } = await api.registry.list()
         if( error ) throw new Error( message )
 
         console.log('Registries: ', registries )
@@ -208,7 +209,7 @@ describe('[BND TEST] ------------------------------------------------', function
           name: 'Daily Articles Emails',
           list: [ 'xyz@example.com', 'abc@example.com' ]
         },
-        { error, message, registry } = await BND.registry.update( REGISTRY_ID, payload )
+        { error, message, registry } = await api.registry.update( REGISTRY_ID, payload )
         if( error ) throw new Error( message )
 
         console.log('Registry: ', registry )
@@ -217,7 +218,7 @@ describe('[BND TEST] ------------------------------------------------', function
     
     describe('# BND.registry.remove(...)', function(){
       it('Shoud return JSON response with "message" as "Registry Deleted"', async function(){
-        const { error, status, message } = await BND.registry.remove( REGISTRY_ID )
+        const { error, status, message } = await api.registry.remove( REGISTRY_ID )
         console.log({ error, status, message })
       })
     })
@@ -283,7 +284,7 @@ describe('[BND TEST] ------------------------------------------------', function
             delay: 30
           }
         },
-        { error, status, message } = await BND.send.SMS( payload )
+        { error, status, message } = await api.send.SMS( payload )
         if( error ) throw new Error( message )
         
         console.log({ error, status, message })
