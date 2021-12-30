@@ -62,18 +62,18 @@ createRegistry = async function(){
 describe('[BND TEST] ------------------------------------------------', function(){
   describe('# Initial Configuration: (/lib/BND/index.js)', function(){
     it('Should throw "No configuratin defined" Error', function(){
-      try { api = BND() }
+      try { api = BND.config() }
       catch( error ){ console.log( error.message ) }
     })
 
     it('Should throw Incompleted Configuration Error', function(){
-      try { api = BND({ server: 'https://example.com' }) }
+      try { api = BND.config({ server: 'https://example.com' }) }
       catch( error ){ console.log( error.message ) }
     })
 
     it('Valid Configuration', function(){
       try { 
-        api = BND({
+        api = BND.config({
                     server: 'http://bnd.micros.io:10001/v1',
                     userAgent: 'MP.LMS/1.0',
                     application: 'Multipple',
