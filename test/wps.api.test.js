@@ -1,5 +1,6 @@
 
 const { WPS } = require('../index')
+const { debug } = require('./../utils')
 
 let APP_ID = '2FE-2E4E-8BCF' // Dummy appId
 
@@ -7,12 +8,12 @@ describe('[WPS API TEST] ------------------------------------------------', func
   describe('#Initial Configuration: (/lib/WPS/index.js)', function(){
     it('Should throw "No configuratin defined" Error', function(){
       try { WPS.config() }
-      catch( error ){ console.log( error.message ) }
+      catch( error ){ console.error( error.message ) }
     })
 
     it('Should throw Incompleted Configuration Error', function(){
       try { WPS.config({ server: 'https://example.com' }) }
-      catch( error ){ console.log( error.message ) }
+      catch( error ){ console.error( error.message ) }
     })
 
     it('Valid Configuration', function(){
@@ -24,12 +25,12 @@ describe('[WPS API TEST] ------------------------------------------------', func
                     host: 'hello.multipple.com',
                     accessToken: 'gR2M0ZDlkOTc1NjQyN2M1NGUjZTg5OTI4MzY3NDyNRzicj9GVNxZK2N5aSpkQr6NjNDOpdoU07DddWOeE9nPRXKzP3'
                   }) }
-      catch( error ){ console.log( error ) }
+      catch( error ){ console.error( error ) }
     })
 
     it('Overwrite Existing Configuration', function(){
       try { WPS.setConfig({ host: 'gretting.multipple.com' }) }
-      catch( error ){ console.log( error ) }
+      catch( error ){ console.error( error ) }
     })
   })
   
@@ -53,7 +54,7 @@ describe('[WPS API TEST] ------------------------------------------------', func
         
         appId ?
             APP_ID = appId
-            : console.log({ error, status, message })
+            : console.error({ error, status, message })
       })
     })
 
@@ -62,7 +63,7 @@ describe('[WPS API TEST] ------------------------------------------------', func
         const { error, message, application } = await WPS.api.getApp( APP_ID )
         if( error ) throw new Error( message )
 
-        console.log('Application: ', application )
+        debug('Application: ', application )
       })
     })
 
@@ -71,7 +72,7 @@ describe('[WPS API TEST] ------------------------------------------------', func
         const { error, message, results } = await WPS.api.getApps()
         if( error ) throw new Error( message )
 
-        console.log('Results: ', results )
+        debug('Results: ', results )
       })
     })
 
@@ -85,14 +86,14 @@ describe('[WPS API TEST] ------------------------------------------------', func
         { error, message, application } = await WPS.api.updateApp( APP_ID, payload )
         if( error ) throw new Error( message )
 
-        console.log('Application: ', application )
+        debug('Application: ', application )
       })
     })
 
     describe.skip('#deleteApp()', function(){
       it('Shoud return JSON response with "message" as "Application Deleted"', async function(){
         const { error, status, message } = await WPS.api.deleteApp( APP_ID )
-        console.log({ error, status, message })
+        debug({ error, status, message })
       })
     })
 
@@ -101,7 +102,7 @@ describe('[WPS API TEST] ------------------------------------------------', func
         const { error, message, result } = await WPS.api.getIncomingRequestURL( APP_ID )
         if( error ) throw new Error( message )
 
-        console.log('URL: ', result )
+        debug('URL: ', result )
       })
     })
 
@@ -110,7 +111,7 @@ describe('[WPS API TEST] ------------------------------------------------', func
         const { error, message, result } = await WPS.api.getIncomingRequestToken( APP_ID )
         if( error ) throw new Error( message )
 
-        console.log('Incoming Token: ', result )
+        debug('Incoming Token: ', result )
       })
     })
 
@@ -119,7 +120,7 @@ describe('[WPS API TEST] ------------------------------------------------', func
         const { error, message, result } = await WPS.api.getOutgoingRequestToken( APP_ID )
         if( error ) throw new Error( message )
 
-        console.log('Outgoing Token: ', result )
+        debug('Outgoing Token: ', result )
       })
     })
   })

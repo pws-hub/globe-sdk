@@ -11,6 +11,7 @@
     "test:all": "mocha test",
     "test:wps:connect": "mocha test/wps.connect.test",
     "test:wps:api": "mocha test/wps.api.test",
+    "test:csa": "mocha test/csa.test",
     "test:bnd": "mocha test/bnd.test"
   },
   "dependencies": {

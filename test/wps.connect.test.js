@@ -5,12 +5,12 @@ describe('[WPS CONNECT TEST] ------------------------------------------------', 
   describe('#Initial Configuration: (/lib/WPS/index.js)', function(){
     it('Should throw "No configuratin defined" Error', function(){
       try { WPS.config() }
-      catch( error ){ console.log( error.message ) }
+      catch( error ){ console.error( error.message ) }
     })
 
     it('Should throw Incompleted Configuration Error', function(){
       try { WPS.config({ server: 'https://example.com' }) }
-      catch( error ){ console.log( error.message ) }
+      catch( error ){ console.error( error.message ) }
     })
 
     it('Valid Configuration', function(){
@@ -22,14 +22,14 @@ describe('[WPS CONNECT TEST] ------------------------------------------------', 
                     host: 'hello.multipple.com',
                     accessToken: 'gR2M0ZDlkOTc1NjQyN2M1NGUjZTg5OTI4MzY3NDyNRzicj9GVNxZK2N5aSpkQr6NjNDOpdoU07DddWOeE9nPRXKzP3'
                   }) }
-      catch( error ){ console.log( error ) }
+      catch( error ){ console.error( error ) }
     })
   })
 
   describe('#Provider Connect: (/lib/WPS/Connect.js)', function(){
     it.skip('Should throw "No configuratin Found" Error', function(){
       try { WPS.connect() }
-      catch( error ){ console.log( error.message ) }
+      catch( error ){ console.error( error.message ) }
     })
     
     it('Connected Successfully', function(){

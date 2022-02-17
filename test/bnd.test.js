@@ -1,5 +1,6 @@
 
 const { BND } = require('../index')
+const { debug } = require('./../utils')
 
 let 
 TRANSPORT_ID = '2FE-2E4E-8BCF', // Dummy transportId
@@ -63,12 +64,12 @@ describe('[BND TEST] ------------------------------------------------', function
   describe('# Initial Configuration: (/lib/BND/index.js)', function(){
     it('Should throw "No configuratin defined" Error', function(){
       try { api = BND.config() }
-      catch( error ){ console.log( error.message ) }
+      catch( error ){ debug( error.message ) }
     })
 
     it('Should throw Incompleted Configuration Error', function(){
       try { api = BND.config({ server: 'https://example.com' }) }
-      catch( error ){ console.log( error.message ) }
+      catch( error ){ debug( error.message ) }
     })
 
     it('Valid Configuration', function(){
@@ -80,12 +81,12 @@ describe('[BND TEST] ------------------------------------------------', function
                     host: 'hello.multipple.com',
                     accessToken: 'yNRzicj9GVNxZK2N5aSpkQr6NjNDOpdoU07DddWOeE9nPRXKzP3gR2M0ZDlkOTc1NjQyN2M1NGUjZTg5OTI4MzY3ND'
                   }) }
-      catch( error ){ console.log( error ) }
+      catch( error ){ debug( error ) }
     })
 
     it('Overwrite Existing Configuration', function(){
       try { api.setConfig({ host: 'gretting.multipple.com' }) }
-      catch( error ){ console.log( error ) }
+      catch( error ){ debug( error ) }
     })
   })
   
@@ -99,7 +100,7 @@ describe('[BND TEST] ------------------------------------------------', function
         const { error, message, transport } = await api.transport.get( TRANSPORT_ID )
         if( error ) throw new Error( message )
 
-        console.log('Transport: ', transport )
+        debug('Transport: ', transport )
       })
     })
     
@@ -108,7 +109,7 @@ describe('[BND TEST] ------------------------------------------------', function
         const { error, message, transports } = await api.transport.list()
         if( error ) throw new Error( message )
 
-        console.log('Transports: ', transports )
+        debug('Transports: ', transports )
       })
     })
     
@@ -122,14 +123,14 @@ describe('[BND TEST] ------------------------------------------------', function
         { error, message, transport } = await api.transport.update( TRANSPORT_ID, payload )
         if( error ) throw new Error( message )
 
-        console.log('Transport: ', transport )
+        debug('Transport: ', transport )
       })
     })
     
     describe('# BND.transport.remove(...)', function(){
       it('Shoud return JSON response with "message" as "Transport Deleted"', async function(){
         const { error, status, message } = await api.transport.remove( TRANSPORT_ID )
-        console.log({ error, status, message })
+        debug({ error, status, message })
       })
     })
   })
@@ -144,7 +145,7 @@ describe('[BND TEST] ------------------------------------------------', function
         const { error, message, template } = await api.template.get( TEMPLATE_ID )
         if( error ) throw new Error( message )
 
-        console.log('Template: ', template )
+        debug('Template: ', template )
       })
     })
     
@@ -153,7 +154,7 @@ describe('[BND TEST] ------------------------------------------------', function
         const { error, message, templates } = await api.template.list()
         if( error ) throw new Error( message )
 
-        console.log('Templates: ', templates )
+        debug('Templates: ', templates )
       })
     })
     
@@ -167,14 +168,14 @@ describe('[BND TEST] ------------------------------------------------', function
         { error, message, template } = await api.template.update( TEMPLATE_ID, payload )
         if( error ) throw new Error( message )
 
-        console.log('Template: ', template )
+        debug('Template: ', template )
       })
     })
     
     describe('# BND.template.remove(...)', function(){
       it('Shoud return JSON response with "message" as "Template Deleted"', async function(){
         const { error, status, message } = await api.template.remove( TEMPLATE_ID )
-        console.log({ error, status, message })
+        debug({ error, status, message })
       })
     })
   })
@@ -189,7 +190,7 @@ describe('[BND TEST] ------------------------------------------------', function
         const { error, message, registry } = await api.registry.get( REGISTRY_ID )
         if( error ) throw new Error( message )
 
-        console.log('Registry: ', registry )
+        debug('Registry: ', registry )
       })
     })
     
@@ -198,7 +199,7 @@ describe('[BND TEST] ------------------------------------------------', function
         const { error, message, registries } = await api.registry.list()
         if( error ) throw new Error( message )
 
-        console.log('Registries: ', registries )
+        debug('Registries: ', registries )
       })
     })
     
@@ -212,14 +213,14 @@ describe('[BND TEST] ------------------------------------------------', function
         { error, message, registry } = await api.registry.update( REGISTRY_ID, payload )
         if( error ) throw new Error( message )
 
-        console.log('Registry: ', registry )
+        debug('Registry: ', registry )
       })
     })
     
     describe('# BND.registry.remove(...)', function(){
       it('Shoud return JSON response with "message" as "Registry Deleted"', async function(){
         const { error, status, message } = await api.registry.remove( REGISTRY_ID )
-        console.log({ error, status, message })
+        debug({ error, status, message })
       })
     })
   })
@@ -261,7 +262,7 @@ describe('[BND TEST] ------------------------------------------------', function
     //     { error, status, message } = await BND.send.email( payload )
     //     if( error ) throw new Error( message )
         
-    //     console.log({ error, status, message })
+    //     debug({ error, status, message })
     //   })
     // })
 
@@ -287,7 +288,7 @@ describe('[BND TEST] ------------------------------------------------', function
         { error, status, message } = await api.send.SMS( payload )
         if( error ) throw new Error( message )
         
-        console.log({ error, status, message })
+        debug({ error, status, message })
       })
     })
   })

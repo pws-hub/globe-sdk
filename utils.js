@@ -1,4 +1,6 @@
 
+let DEBUG_MODE = false
+
 module.exports = {
   
   checkConfig: ( type, config ) => {
@@ -12,6 +14,7 @@ module.exports = {
     let requiredFields
     switch( type ){
       case 'APS': requiredFields = [ 'baseURL', 'provider' ]; break
+      case 'CSA': requiredFields = [ 'baseURL', 'accessToken' ]; break
       case 'WPS': requiredFields = [ 'server', 'userAgent', 'provider', 'host', 'accessToken' ]; break
       case 'BND': requiredFields = [ 'server', 'userAgent', 'application', 'host', 'accessToken' ]; break
       case 'MDP.DS': requiredFields = [ 'server', 'userAgent', 'host', 'accessToken', 'collections' ]; break
@@ -22,5 +25,7 @@ module.exports = {
       if( !config.hasOwnProperty( requiredFields[o] ) )
         throw new Error(`[${type}] <${requiredFields[o]}> configuration is required`)
     }
-  }
+  },
+
+  debug: ( ...args ) => DEBUG_MODE && console.log( ...args )
 }
