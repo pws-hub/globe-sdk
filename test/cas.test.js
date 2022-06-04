@@ -52,13 +52,18 @@ describe('[CAS TEST] ------------------------------------------------', function
     //   try { CAS.connect() }
     //   catch( error ){ console.error( error.message ) }
     // })
-    
+
     let API
     if( INVALID_CONFIG )
       return console.log('Invalid Configuration')
     
     it('Connected Successfully', function(){
       try { API = CAS.connect() }
+      catch( error ){ console.error( error.message ) }
+    })
+
+    it('Should throw "CAS is already connected" Error', function(){
+      try { CAS.connect() }
       catch( error ){ console.error( error.message ) }
     })
     
