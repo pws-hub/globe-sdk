@@ -66,14 +66,9 @@ describe('[CAS TEST] ------------------------------------------------', function
       try { CAS.connect() }
       catch( error ){ console.error( error.message ) }
     })
-    
-    it('Create new bucket', async function(){
-      try { console.log( await API.Space().bucket('CASTestBucket') ) }
-      catch( error ){ console.error( error.message ) }
-    })
 
     it('Fetch items from a bucket', async function(){
-      try { console.log( await API.Space().fetch() ) }
+      try { console.log( await API.Space().get('/translations/en.json', 'json') ) }
       catch( error ){ console.error( error.message ) }
     })
   })
