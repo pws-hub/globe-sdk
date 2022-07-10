@@ -10,6 +10,7 @@
   "scripts": {
     "test:all": "mocha test",
     "test:wps:connect": "mocha test/wps.connect.test",
+    "test:authorizer": "mocha test/authorizer.test",
     "test:wps:api": "mocha test/wps.api.test",
     "test:bnd": "mocha test/bnd.test",
     "test:csa": "mocha test/csa.test",

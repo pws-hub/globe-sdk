@@ -36,7 +36,6 @@ describe('[CAS TEST] ------------------------------------------------', function
                       }
                     ],
                     defaultRegion: 'fra1',
-                    staticPrefix: '@cdn',
                     compressKey: 'DmghtKXJXxL6lYqJgCGnL1dXGgDJ6m6L'
                   })
       }

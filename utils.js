@@ -1,5 +1,5 @@
 
-let DEBUG_MODE = false
+let DEBUG_MODE = true
 
 module.exports = {
   
@@ -13,6 +13,7 @@ module.exports = {
 
     let requiredFields
     switch( type ){
+      case 'Authorizer': requiredFields = [ 'service', 'manifest', 'agentHeader', 'tokenHeader' ]; break // 'expiry', 'rotateToken', 'allowedOrigins'
       case 'APS': requiredFields = [ 'baseURL', 'provider' ]; break
       case 'CSA': requiredFields = [ 'baseURL', 'accessToken' ]; break
       case 'WPS': requiredFields = [ 'server', 'userAgent', 'provider', 'host', 'accessToken' ]; break

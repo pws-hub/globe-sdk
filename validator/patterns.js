@@ -1,5 +1,5 @@
 
-export default function(){
+module.exports = function(){
 
 		var THIS = this
 
