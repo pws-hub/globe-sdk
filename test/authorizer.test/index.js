@@ -20,7 +20,7 @@ describe('[Authorizer TEST] ------------------------------------------------', f
       try {
         api = Authorizer({
                           service: 'database',
-                          manifest: './test/authorizer.test/manifest.json',
+                          manifest: require('./manifest.json'),
                           agentHeader: 'x-user-agent',
                           tokenHeader: 'x-access-token',
                           allowedOrigins: '(\.?)(vend|multipple)\.(one|com)',
