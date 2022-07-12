@@ -30,5 +30,16 @@ module.exports = {
     }
   },
 
+  getOrigin: hreq => {
+
+    const origin = typeof hreq == 'object' ?
+                                  hreq.headers.origin ?
+                                          new URL( hreq.headers.origin ).hostname
+                                          : hreq.headers.host
+                                  : ( hreq || '' ).replace(/http(s?):\/\//,'')
+
+    return ( origin || '' ).replace(/:[0-9]{4,}/,'')
+  },
+
   debug: ( ...args ) => DEBUG_MODE && console.log( ...args )
 }
