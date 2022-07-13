@@ -16,12 +16,12 @@ describe('[WPS CONNECT TEST] ------------------------------------------------', 
     
     it('Valid Configuration', function(){
       try { 
-        WPS.config({ 
+        WPS.config({
                     server: 'http://wps.micros.io:10003',
-                    userAgent: 'MP.LXP/1.0',
-                    provider: 'Multipple',
-                    host: 'hello.multipple.com',
-                    accessToken: 'gR2M0ZDlkOTc1NjQyN2M1NGUjZTg5OTI4MzY3NDyNRzicj9GVNxZK2N5aSpkQr6NjNDOpdoU07DddWOeE9nPRXKzP3'
+                    userAgent: 'Bloum/1.0',
+                    provider: 'Bloum',
+                    host: 'api.bloum.io',
+                    accessToken: 'NjgRaDU0eTI4MpkQUjZTNRziVzYSN2QkOTc11NgDl5yNrcj9G6NjN3ND3PRX7DdyG2MM0ZOZK2N5xEOKzdWOpdo9nP'
                   }) }
       catch( error ){ console.error( error ) }
     })

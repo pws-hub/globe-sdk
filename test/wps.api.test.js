@@ -20,7 +20,7 @@ describe('[WPS API TEST] ------------------------------------------------', func
       try { 
         WPS.config({ 
                     server: 'http://wps.micros.io:10003',
-                    userAgent: 'MP.LMS/1.0',
+                    userAgent: 'MP.LXP/1.0',
                     provider: 'Multipple',
                     host: 'hello.multipple.com',
                     accessToken: 'gR2M0ZDlkOTc1NjQyN2M1NGUjZTg5OTI4MzY3NDyNRzicj9GVNxZK2N5aSpkQr6NjNDOpdoU07DddWOeE9nPRXKzP3'
@@ -42,12 +42,12 @@ describe('[WPS API TEST] ------------------------------------------------', func
           name: 'MyWebhookApp',
           tenant: {
             id: 'hello-x4qMZVSb68n',
-            origin: '{{MP_TenantOrigin}}'
+            origin: 'hello.multipple.com'
           },
-          requestURL: 'http://plugin.multipple.com:4009/some/pathname',
-          eventTypes: [
-            'meeting_created',
-            'meeting_end'
+          requestURL: 'http://brain.multipple.com:7000/check',
+          eventList: [
+            'group.created',
+            'group.updated'
           ]
         },
         { error, status, message, appId } = await WPS.api.createApp( payload )
@@ -66,6 +66,8 @@ describe('[WPS API TEST] ------------------------------------------------', func
         debug('Application: ', application )
       })
     })
+
+    return
 
     describe('#getApps()', function(){
       it('Shoud return JSON response with "results" as array', async function(){
