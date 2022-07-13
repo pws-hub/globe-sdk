@@ -1,6 +1,14 @@
 
 let DEBUG_MODE = true
 
+String.prototype.toCapitalCase = function(){
+  // Fonction de capitalisation du premier caractère d'un mot
+  this.toLowerCase()
+  
+  const First = this.charAt(0)
+  return First.toUpperCase() + this.split( new RegExp( '^'+ First ) )[1]
+}
+
 module.exports = {
   
   checkConfig: ( type, config ) => {

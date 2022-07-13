@@ -1,7 +1,10 @@
 const { WPS } = require('../index')
 const { debug } = require('./../utils')
 
-let WPSEvent
+let 
+WPSEvent,
+APP_ID
+
 describe('[WPS CONNECT TEST] ------------------------------------------------', function(){
   describe('#Initial Configuration: (/lib/WPS/index.js)', function(){
     it('Should throw "No configuratin defined" Error', function(){
@@ -27,6 +30,37 @@ describe('[WPS CONNECT TEST] ------------------------------------------------', 
     })
   })
 
+  describe('#API Wrapper: (/lib/WPS/APIWrapper.js)', function(){
+    describe('#createApp()', function(){
+      it('Shoud return JSON response with "appId"', async function(){
+        const 
+        payload = {
+          name: 'Bloum',
+          tenant: {
+            id: 'bloum-x4qMZVSb68n',
+            origin: 'api.bloum.io'
+          },
+          requestURL: 'http://api.bloum.io:28600/webhook',
+          eventList: ['shared']
+        },
+        { error, status, message, appId } = await WPS.api.createApp( payload )
+        
+        appId ?
+            APP_ID = appId
+            : console.error({ error, status, message })
+      })
+    })
+
+    describe('#getApp()', function(){
+      it('Shoud return JSON response with "application"', async function(){
+        const { error, message, application } = await WPS.api.getApp( APP_ID )
+        if( error ) throw new Error( message )
+
+        debug('Application: ', application )
+      })
+    })
+  })
+    
   describe('#Provider Connect: (/lib/WPS/Connect.js)', function(){
     it.skip('Should throw "No configuratin Found" Error', async function(){
       try { await WPS.connect() }
@@ -41,7 +75,7 @@ describe('[WPS CONNECT TEST] ------------------------------------------------', 
 
   describe('#Provider Events: (/lib/WPS/Connect.js)', function(){
     it('Emit event Successfully', function(){
-      WPSEvent.emit('create_group', 'target', {})
+      WPSEvent.emit('group.created', 'serviceuniqtoken', {})
     })
   })
 })

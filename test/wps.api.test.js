@@ -45,6 +45,7 @@ describe('[WPS API TEST] ------------------------------------------------', func
             origin: 'hello.multipple.com'
           },
           requestURL: 'http://brain.multipple.com:7000/check',
+          eventTarget: 'serviceuniqtoken',
           eventList: [
             'group.created',
             'group.updated'
