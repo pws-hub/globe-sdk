@@ -41,7 +41,7 @@ describe('[WPS CONNECT TEST] ------------------------------------------------', 
 
   describe('#Provider Events: (/lib/WPS/Connect.js)', function(){
     it('Emit event Successfully', function(){
-      WPSEvent.emit('create_group', {})
+      WPSEvent.emit('create_group', 'target', {})
     })
   })
 })
