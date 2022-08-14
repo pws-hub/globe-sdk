@@ -1,6 +1,6 @@
 
-const { WPS } = require('../index')
-const { debug } = require('./../utils')
+const { WPS } = require('../dist')
+const { debug } = require('../dist/utils')
 
 let APP_ID = '2FE-2E4E-8BCF' // Dummy appId
 

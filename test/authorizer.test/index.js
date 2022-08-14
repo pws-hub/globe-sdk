@@ -1,6 +1,6 @@
 
-const { Authorizer } = require('../../index')
-const { debug } = require('../../utils')
+const { Authorizer } = require('../../dist')
+const { debug } = require('../../dist/utils')
 
 let api
 

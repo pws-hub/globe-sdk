@@ -1,6 +1,6 @@
 
-const { CSA } = require('../index')
-const { debug } = require('./../utils')
+const { CSA } = require('../dist')
+const { debug } = require('../dist/utils')
 
 let 
 WORKSPACE_ID = '143-93148c-f011', // Dummy workspaceId

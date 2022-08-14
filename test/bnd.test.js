@@ -1,6 +1,6 @@
 
-const { BND } = require('../index')
-const { debug } = require('./../utils')
+const { BND } = require('../dist')
+const { debug } = require('../dist/utils')
 
 let 
 TRANSPORT_ID = '2FE-2E4E-8BCF', // Dummy transportId

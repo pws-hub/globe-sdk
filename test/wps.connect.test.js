@@ -1,5 +1,6 @@
-const { WPS } = require('../index')
-const { debug } = require('./../utils')
+
+const { WPS } = require('../dist')
+const { debug } = require('../dist/utils')
 
 let 
 WPSEvent,
