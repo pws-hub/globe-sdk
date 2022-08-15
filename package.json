@@ -17,16 +17,13 @@
   "scripts": {
     "compile": "rimraf ./dist && tsc",
     "prepack": "yarn run compile",
-    "test": "yarn run compile && yarn run test:types && yarn run test:unit",
-    "test:unit": "nyc mocha --require ts-node/register --reporter spec --slow 200 --bail --timeout 10000 test/iframe.io.ts",
-    "test:types": "tsd",
-    "test:all": "mocha test",
-    "test:wps:connect": "mocha test/wps.connect.test",
-    "test:authorizer": "mocha test/authorizer.test",
-    "test:wps:api": "mocha test/wps.api.test",
-    "test:bnd": "mocha test/bnd.test",
-    "test:csa": "mocha test/csa.test",
-    "test:cas": "mocha test/cas.test"
+    "test:all": "yarn compile && mocha test",
+    "test:wps:connect": "yarn compile && mocha test/wps.connect.test",
+    "test:authorizer": "yarn compile && mocha test/authorizer.test",
+    "test:wps:api": "yarn compile && mocha test/wps.api.test",
+    "test:bnd": "yarn compile && mocha test/bnd.test",
+    "test:csa": "yarn compile && mocha test/csa.test",
+    "test:cas": "yarn compile && mocha test/cas.test"
   },
   "dependencies": {
     "aws-sdk": "^2.1148.0",

@@ -34,6 +34,7 @@ import tinify from 'tinify'
 import request from 'request'
 import parseUrl from 'parseurl'
 import randtoken from 'rand-token'
+import { Readable, ReadableOptions, PassThrough } from 'stream'
 import { checkConfig } from '../utils'
 
 type Space = {
@@ -61,10 +62,115 @@ type S3Connection = {
 type SpaceOption = {
   absoluteURL: boolean
 }
+type StreamParams = {
+  maxLength?: number
+  chunkRange?: number
+  queueSize?: number
+}
+type S3ProgressListener = ( details: S3.ManagedUpload.Progress ) => void
 
 let
 CONFIG: Config,
 CONN: { [index: string]: S3Connection } = {}
+
+class S3Downstream extends Readable {
+  
+  S3: S3 // AWS.S3 instance
+  __currentCursorPosition = 0 // Holds the current starting position for our range queries
+  __chunkRange = 128 // Amount of bytes to grab (2048 is default: For HD video files)
+  __maxContentLength: number // Total number of bites in the file
+  __S3Params: S3.GetObjectRequest // Parameters passed into s3.getObject method
+  __streamParams: StreamParams
+
+  /** Pass any ReadableStream options to the NodeJS Readable 
+   * super class here. For this example we wont use this, 
+   * however I left it in to be more robust
+   */
+  constructor( S3Instance: S3, S3Params: S3.GetObjectRequest, streamParams: StreamParams, readableStreamOptions?: ReadableOptions ) {
+    super( readableStreamOptions )
+
+    this.S3 = S3Instance
+    
+    this.__S3Params = S3Params
+    this.__streamParams = streamParams
+
+    if( streamParams.chunkRange )
+      this.__chunkRange = streamParams.chunkRange
+
+    // maxLength is strictly required
+    if( !streamParams.maxLength ) throw new Error('Undefined Maximum Data Content Length')
+    this.__maxContentLength = streamParams.maxLength
+  }
+
+  _read(){
+    /** If the current position is greater than 
+     * the amount of bytes in the file. 
+     * We push null into the buffer, NodeJS
+     * ReadableStream will see this as the end 
+     * of file (EOF) and emit the 'end' event
+     */
+    if( this.__currentCursorPosition > this.__maxContentLength )
+      this.push( null )
+    
+    else {
+      const
+      // Calculate the range of bytes we want to grab
+      range = this.__currentCursorPosition + ( this.__chunkRange * 1024 ),
+      /** If the range is greater than the total number of 
+       * bytes in the file. We adjust the range to grab 
+       * the remaining bytes of data 
+       */
+      adjustedRange = range < this.__maxContentLength ? range : this.__maxContentLength
+
+      // Set the Range property on our s3 stream parameters
+      this.__S3Params.Range = `bytes=${this.__currentCursorPosition}-${adjustedRange}`
+      // Update the current range beginning for the next go
+      this.__currentCursorPosition = adjustedRange + 1
+      // Grab the range of bytes from the file
+      this.S3.getObject( this.__S3Params, ( error, data ) => {
+        error ?
+          /** If we encounter an error grabbing the bytes. 
+           * We destroy the stream, NodeJS ReadableStream 
+           * will emit the 'error' event
+           */
+          this.destroy( error )
+          // We push the data into the stream buffer
+          : this.push( data.Body )
+      })
+    }
+  }
+}
+
+class S3Upstream {
+
+  queueSize = 1 // How many chunk/part of bytes to simultaneously stream
+  chunkRange = 128 // Amount of bytes to send (2048 is default: For HD video files)
+  promise: Promise<S3.ManagedUpload.SendData>
+  upStream: PassThrough
+  private progressListener: S3ProgressListener
+
+  constructor( S3Instance: S3, S3Params: S3.PutObjectRequest, streamParams: StreamParams ){
+    
+    const pass = new PassThrough()
+
+    S3Params.Body = pass
+    this.progressListener = ({ loaded, total }) => { console.log(`Progress: ${loaded}/${total || '-'}`) }
+    
+    if( streamParams.queueSize ) this.queueSize = streamParams.queueSize
+    if( streamParams.chunkRange ) this.chunkRange = streamParams.chunkRange
+
+    const manager = S3Instance.upload( S3Params, {
+                                                  partSize: this.chunkRange * 1024, 
+                                                  queueSize: this.queueSize 
+                                                })
+    manager.on('httpUploadProgress', details => this.progressListener( details ) )
+
+    this.upStream = pass
+    this.promise = manager.promise()
+  }
+
+  trackProgress( fn: S3ProgressListener ){ this.progressListener = fn }
+}
 
 function Init(){
   
@@ -264,6 +370,70 @@ function Init(){
 
           CONN[ region as string ].S3.deleteObject( options, ( error, data ) => error ? reject( error ) : resolve( true ) )
         } )
+      },
+
+      // Stream asset
+      stream: {
+        /** Handle stream download file from Amazon S3 */
+        from: ( path: string, pipeStreamOptions?: ReadableOptions ): Promise<S3Downstream> => {
+          return new Promise( ( resolve, reject ) => {
+            
+            const options = {
+              Bucket: CONN[ region as string ].bucket, 
+              Key: path
+            }
+            try {
+              CONN[ region as string ].S3.headObject( options, ( error, data ) => {
+                if( error ) return reject( error )
+                
+                /** Instantiate the S3Downstream class with 
+                 * details returned by s3.headObject
+                 * 
+                 * NOTE: Set default chunk data range to 1Mb (1024)
+                 *        by default.
+                 *        Though, scheduled to be upgraded to 
+                 *        self adaptation to underline bandwith
+                 */
+                const streamParams = {
+                  chunkRange: 1024,
+                  maxLength: data.ContentLength as number
+                }
+                resolve( new S3Downstream( CONN[ region as string ].S3, options, streamParams, pipeStreamOptions ) )
+              })
+            }
+            catch( error ){ reject( error ) }
+          })
+        },
+
+        /** Handle stream upload file to Amazon S3 */
+        to: async ( path: string, progress?: S3ProgressListener ): Promise<S3Upstream['upStream']> => {
+          const
+          options = {
+            Bucket: CONN[ region as string ].bucket, 
+            Key: path
+          },
+          /** Instantiate the S3Upstream class to upload
+           * 
+           * NOTE: Set default chunk data range to 5Mb (5 * 1024)
+           *        by default: Minimum limit set by AWS S3
+           *        Though, scheduled to be upgraded to 
+           *        self adaptation to underline bandwith.
+           * 
+           *        Also queue at least 4 chunks/parts of 5M
+           *        simultaneously to speed up the streaming
+           *        if the underline connection can handle it.
+           */
+          manager = new S3Upstream( CONN[ region as string ].S3, options, { chunkRange: 5 * 1024, queueSize: 4 } )
+          
+          // Register progress tracking listener
+          typeof progress == 'function'
+          && manager.trackProgress( progress )
+          
+          // Log stream error in console
+          manager.promise.catch( console.log )
+          // Return upload stream to be piped
+          return manager.upStream
+        }
       }
     }
   }
