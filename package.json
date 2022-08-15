@@ -48,7 +48,8 @@
     "typescript": "^4.7.4"
   },
   "directories": {
-    "example": "example/",
+    "dist": "dist/",
+    "docs": "docs/",
     "test": "test/"
   },
   "license": "MIT",
@@ -56,11 +57,5 @@
     "type": "git",
     "url": "git://github.com/pws-hub/globe-sdk"
   },
-  "keywords": [
-    "realtime",
-    "iframe",
-    "browser",
-    "events",
-    "io"
-  ]
+  "keywords": []
 }
