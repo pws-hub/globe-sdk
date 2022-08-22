@@ -2,9 +2,7 @@
 import request from 'request'
 import ioClient from 'socket.io-client'
 import { getOrigin } from '../../utils'
-
-type EventListeners = { [index: string]: (( arg?: any ) => void)[] }
-type CustomListeners = { [index: string]: ( arg?: any ) => void }
+import type { EventListeners, CustomListeners } from '../../types/wps'
 
 let
 IOClient: any,

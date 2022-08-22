@@ -16,18 +16,8 @@
     - DATABASE_NAME = Name of targeted database
 */
 import { ObjectId } from 'mongodb'
-import { Config } from './types'
 import { toCapitalCase } from '../../utils'
-
-type Process = {
-  error: any
-  message?: string
-  data?: any
-  final: { [index: string]: any }
-}
-type AnyObject = {
-  [index: string]: any
-}
+import type { MDPConfig, Process, AnyObject } from '../../types/mdp'
 
 const
 STypes = [ 'one', 'many', 'all' ],
@@ -409,7 +399,7 @@ class Query {
   }
 }
 
-function dbConnect( config: Config ){
+function dbConnect( config: MDPConfig ){
   return new Promise( ( resolve, reject ) => {
 
     let { dbServer, dbName, collections } = config
@@ -450,4 +440,4 @@ function dbConnect( config: Config ){
   } )
 }
 
-export default ( config: Config ) => dbConnect( config )
+export default ( config: MDPConfig ) => dbConnect( config )

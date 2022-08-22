@@ -11,7 +11,7 @@ export const checkConfig = ( type: string, config: any ) => {
 
   let requiredFields: string[] = []
   switch( type ){
-    case 'Authorizer': requiredFields = [ 'service', 'manifest', 'agentHeader', 'tokenHeader' ]; break // 'expiry', 'rotateToken', 'allowedOrigins'
+    case 'Authorizer': requiredFields = [ 'service', 'manifest', 'agentHeader', 'tokenHeader' ]; break // 'framework', 'expiry', 'rotateToken', 'allowedOrigins'
     case 'APS': requiredFields = [ 'baseURL', 'provider' ]; break
     case 'CSA': requiredFields = [ 'baseURL', 'accessToken' ]; break
     case 'WPS': requiredFields = [ 'server', 'userAgent', 'provider', 'host', 'accessToken' ]; break

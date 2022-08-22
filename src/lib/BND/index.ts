@@ -5,13 +5,9 @@ import registry from './wrappers/Registry'
 import send from './wrappers/Sender'
 import Verb from './verb'
 import { checkConfig } from '../../utils'
-import type { Config } from './types'
+import type { BNDConfig } from '../../types/bnd'
 
-declare global {
-  var Globe_BNDConfig: Config
-}
-
-function config( config: Config ){
+function config( config: BNDConfig ){
 
   // Check whether all configuration field are defined
   checkConfig( 'BND', config )

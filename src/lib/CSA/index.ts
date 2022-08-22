@@ -2,13 +2,9 @@
 import workspaces from './wrappers/Workspaces'
 import Verb from './verb'
 import { checkConfig } from '../../utils'
-import { Config } from './types'
+import type { CSAConfig } from '../../types/csa'
 
-declare global {
-  var Globe_CSAConfig: Config
-}
-
-export const config = ( config: Config ) => {
+export const config = ( config: CSAConfig ) => {
 
   // Check whether all configuration field are defined
   checkConfig( 'CSA', config )

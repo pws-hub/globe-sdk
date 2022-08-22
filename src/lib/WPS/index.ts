@@ -2,22 +2,9 @@
 import connect from './Connect'
 import api from './APIWrapper'
 import { checkConfig } from '../../utils'
+import type { WPSConfig } from '../../types/wps'
 
-type Config = {
-  server: string
-  host: string
-  userAgent: string
-  provider: string
-  accessToken: string
-  headers: { [index: string]: string }
-  sendVerb?: string
-}
-
-declare global {
-  var Globe_WPSConfig: Config
-}
-
-const config = ( config: Config ) => {
+const config = ( config: WPSConfig ) => {
 
   // Check whether all configuration field are defined
   checkConfig( 'WPS', config )
@@ -36,7 +23,7 @@ const config = ( config: Config ) => {
   global.Globe_WPSConfig = config
 }
 
-const setConfig = ( config: Config ) => {
+const setConfig = ( config: WPSConfig ) => {
 
   if( typeof config != 'object' ) 
     return false

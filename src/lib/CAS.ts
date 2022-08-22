@@ -36,41 +36,16 @@ import parseUrl from 'parseurl'
 import randtoken from 'rand-token'
 import { Readable, ReadableOptions, PassThrough } from 'stream'
 import { checkConfig } from '../utils'
-
-type Space = {
-  region: string
-  endpoint: string
-  version: string
-  bucket: string
-  host: string
-}
-
-type Config = {
-  accessKey: string
-  secret: string
-  compressKey: string
-  spaces: Space[]
-  staticPrefix?: string
-  defaultRegion?: string
-  permission?: string
-}
-type S3Connection = {
-  bucket: string
-  host: string
-  S3: S3
-}
-type SpaceOption = {
-  absoluteURL: boolean
-}
-type StreamParams = {
-  maxLength?: number
-  chunkRange?: number
-  queueSize?: number
-}
-type S3ProgressListener = ( details: S3.ManagedUpload.Progress ) => void
+import type { 
+  CASConfig,
+  S3Connection,
+  SpaceOption,
+  StreamParams,
+  S3ProgressListener
+} from '../types/cas'
 
 let
-CONFIG: Config,
+CONFIG: CASConfig,
 CONN: { [index: string]: S3Connection } = {}
 
 class S3Downstream extends Readable {
@@ -513,7 +488,7 @@ function Init(){
   return { Space, Static }
 }
 
-export const config = ( options: Config ) => {
+export const config = ( options: CASConfig ) => {
 
   if( typeof options != 'object' )
     return ( req: any, res: any, next: any ) => next('[CAS]: Undefined Configuration')

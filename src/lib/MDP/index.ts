@@ -12,9 +12,9 @@
 import DBInterface from './DB'
 import DSInterface from './DS'
 import { checkConfig } from '../../utils'
-import type { Config } from './types'
+import type { MDPConfig } from '../../types/mdp'
 
-export const config = ( type: string, options: Config ) => {
+export const config = ( type: string, options: MDPConfig ) => {
   // Check whether all configuration field are defined
   checkConfig( 'MDP.'+ type.toUpperCase(), options )
 

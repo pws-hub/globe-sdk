@@ -2,12 +2,7 @@
 import request from 'request'
 import { Router } from 'express'
 import { checkConfig } from '../utils'
-
-type Config = {
-  userAgent: string
-  provider: string
-  baseURL: string
-}
+import type { APSConfig } from '../types/aps'
 
 /** APS Provided Routes
  * 
@@ -29,7 +24,7 @@ const ALLOWED_VERBS = [
   'create-account',
   'qrsignin'
 ]
-let CONFIG: Config
+let CONFIG: APSConfig
     
 function To( verb: string, method: string, body: any, headers: any = {} ){
   return new Promise( ( resolve, reject ) => {
@@ -48,7 +43,7 @@ function To( verb: string, method: string, body: any, headers: any = {} ){
   } )
 }
 
-export function config( options: Config ){
+export function config( options: APSConfig ){
 
   if( typeof options != 'object' )
     return ( req: any, res: any, next: any ) => next('[APS]: No Authentication Configuration Found')

@@ -79,6 +79,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 */
 var rand_token_1 = __importDefault(require("rand-token"));
 var express_1 = require("express");
+var fastify_plugin_1 = __importDefault(require("fastify-plugin"));
 var validator_1 = require("../validator");
 var utils_1 = require("../utils");
 var CONFIG;
@@ -98,242 +99,589 @@ var HTTP_ERROR_MESSAGES = {
 ], revokeCreds = [
     { type: 'string', name: 'agent' },
     { type: 'string', name: 'token' }
-];
-function init() {
-    var _this = this;
-    var ExpiryDelay = Number(CONFIG.expiry) || 30, // in minute
-    // Assign API Authorizations Manifest
-    checkAgent = function (req, res, next) {
-        var _a = req.body.agent.split('/'), name = _a[0], version = _a[1];
-        // Check credentials
-        if (!name || !version
-            || !CONFIG.manifest.hasOwnProperty(name)
-            || CONFIG.manifest[name].version != version)
-            return res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Unknown User-Agent' });
-        req.agent = { name: name, version: version, manifest: CONFIG.manifest[name] };
-        next();
-    };
-    return {
-        /* Verify whether authorization access is granted
-          to any user-agent making API request: All routes
-          on this server are sealed
-        */
-        authorization: function (req, res, next) {
-            if (CONFIG.allowedOrigins) {
-                // Require request origin
-                if (!req.headers.origin)
-                    return res.status(403).send(HTTP_ERROR_MESSAGES['403']);
-                // Check headers
-                var origin_1 = req.headers.origin.replace(/http(s?):\/\//, '');
-                // regex domain matcher
-                if (!(new RegExp(CONFIG.allowedOrigins, 'i').test(origin_1)))
-                    return res.status(403).send(HTTP_ERROR_MESSAGES['403']);
+], 
+// Validation schemas
+requestErrorSchema = {
+    type: 'object',
+    properties: {
+        agent: { type: 'string' },
+        token: { type: 'string' },
+        expiry: { type: 'number' },
+    }
+}, askCredsSchema = {
+    schema: {
+        headers: {},
+        body: {
+            type: 'object',
+            properties: {
+                agent: { type: 'string' },
+                instance: { type: 'boolean' },
+                scope: {
+                    type: 'object',
+                    patternProperties: {
+                        '^.*$': { type: ['string'] }
+                    }
+                }
             }
-            if (!req.headers[CONFIG.agentHeader]
-                || !req.headers[CONFIG.tokenHeader])
-                return res.status(412).send(HTTP_ERROR_MESSAGES['412']);
-            var _a = req.headers[CONFIG.agentHeader].split('/'), name = _a[0], version = _a[1], url = req.url.replace(/\?(.+)$/, ''), body = ['GET'].includes(req.method) ? req.query : req.body;
-            // Check user-agent
+        },
+        response: {
+            201: {
+                type: 'object',
+                properties: {
+                    error: { type: 'boolean' },
+                    status: { type: 'string' },
+                    message: { type: 'string' },
+                    result: {
+                        type: ['object', 'null'],
+                        properties: {
+                            agent: { type: 'string' },
+                            token: { type: 'string' },
+                            expiry: { type: 'number' }
+                        }
+                    }
+                }
+            },
+            '4xx': requestErrorSchema
+        }
+    }
+}, refreshCredsSchema = {
+    schema: {
+        headers: {},
+        body: {
+            type: 'object',
+            properties: {
+                agent: { type: 'string' },
+                token: { type: 'string' },
+                expiry: { type: 'number' },
+            }
+        },
+        response: {
+            200: {
+                type: 'object',
+                properties: {
+                    error: { type: 'boolean' },
+                    status: { type: 'string' },
+                    message: { type: 'string' },
+                    result: {
+                        type: ['object', 'null'],
+                        properties: {
+                            agent: { type: 'string' },
+                            token: { type: 'string' },
+                            expiry: { type: 'number' }
+                        }
+                    }
+                }
+            },
+            '4xx': requestErrorSchema
+        }
+    }
+}, revokeCredsSchema = {
+    schema: {
+        headers: {},
+        body: {
+            type: 'object',
+            properties: {
+                agent: { type: 'string' },
+                token: { type: 'string' }
+            }
+        },
+        response: {
+            200: {
+                type: 'object',
+                properties: {
+                    error: { type: 'boolean' },
+                    status: { type: 'string' },
+                    message: { type: 'string' },
+                    result: {
+                        type: ['object', 'null'],
+                        properties: {
+                            agent: { type: 'string' }
+                        }
+                    }
+                }
+            },
+            '4xx': requestErrorSchema
+        }
+    }
+}, SUPPORTED_FRAMEWORKS = {
+    express: function () {
+        var ExpiryDelay = Number(CONFIG.expiry) || 30, // in minute
+        // Assign API Authorizations Manifest
+        checkAgent = function (req, res, next) {
+            var _a = req.body.agent.split('/'), name = _a[0], version = _a[1];
+            // Check credentials
             if (!name || !version
                 || !CONFIG.manifest.hasOwnProperty(name)
                 || CONFIG.manifest[name].version != version)
-                return res.status(401).send(HTTP_ERROR_MESSAGES['401']);
-            // Check credentials
-            var token = req.headers[CONFIG.tokenHeader];
-            var creds = CONFIG.manifest[name].credentials, index;
-            if (Array.isArray(creds)) {
-                for (var o = 0; o < creds.length; o++) {
-                    if (creds[o].token == token) {
-                        index = o;
-                        creds = creds[index];
-                        break;
-                    }
-                }
-                if (index == undefined)
-                    return res.status(401).send(HTTP_ERROR_MESSAGES['401']);
-            }
-            if (!creds
-                || !creds.token
-                || creds.token != token
-                /* The condition below impose that any user-agent
-                  that get its credentials including expiry date
-                  must setup expiry check-up works in other to auto-
-                  matically renew those credentials before the expire.
-                  Otherwise, Data-provider will bounce their requests
-                */
-                || (CONFIG.rotateToken && creds.expiry && creds.expiry < Date.now()))
-                return res.status(401).send(HTTP_ERROR_MESSAGES['401']);
-            // console.log( 'body: ', body, url )
-            // Check allowed APIs
-            // if( !CONFIG.manifest[ name ].scope.endpoints.includes( url ) )
-            //   return res.status(400).send( HTTP_ERROR_MESSAGES['400'] )
-            // console.log( 'body: ', body )
-            // Check allowed datatables for CRUD requests only
-            if (CONFIG.service == 'database'
-                && !url.includes('/tenant')
-                && !url.includes('/authorization') // except authorization API requests
-                && (!body
-                    || !body.table
-                    || !CONFIG.manifest[name].scope.datatables.includes(body.table)))
-                return res.status(400).send(HTTP_ERROR_MESSAGES['400']);
+                return res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Unknown User-Agent' });
+            req.agent = { name: name, version: version, manifest: CONFIG.manifest[name] };
             next();
-        },
-        /* Autorization request routers  to be register to
-          the app's routing system like express
-        */
-        routers: function () {
-            return (0, express_1.Router)()
-                // Grant access credentials to Resources
-                .post('/authorization/request', (0, validator_1.checkFormSchema)(askCreds), checkAgent, function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-                var scope, AllowedScopes, o, o, thisCreds, credentials;
-                return __generator(this, function (_a) {
-                    scope = req.body.scope, AllowedScopes = req.agent.manifest.scope;
-                    if ( // No endpoints scope defined but required
-                    (Array.isArray(AllowedScopes.endpoints)
-                        && AllowedScopes.endpoints.length
-                        && (!Array.isArray(scope.endpoints) || !scope.endpoints.length))
-                        // No table scope defined but required
-                        || CONFIG.service == 'database'
-                            && Array.isArray(AllowedScopes.datatables)
-                            && AllowedScopes.datatables.length
-                            && (!Array.isArray(scope.tables) || !scope.tables.length))
-                        return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Invalid Authorization Scope' })
-                            // Check allowed APIs
-                        ];
-                    // Check allowed APIs
-                    for (o = 0; o < scope.endpoints.length; o++)
-                        if (!AllowedScopes.endpoints.includes(scope.endpoints[o]))
-                            return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Unauthorized Scope API' })
-                                // Check allowed datatables for CRUD requests only
-                            ];
-                    // Check allowed datatables for CRUD requests only
-                    if (CONFIG.service == 'database')
-                        for (o = 0; o < scope.tables.length; o++)
-                            if (!AllowedScopes.datatables.includes(scope.tables[o]))
-                                return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Unauthorized Scope Table' })
-                                    // Grant access
-                                ];
-                    thisCreds = {
-                        token: rand_token_1.default.generate(88),
-                        expiry: Date.now() + (ExpiryDelay * 60 * 1000) // Expire in an hour
-                    };
-                    /* For multi-instance cluster servers or
-                        multiple services using the same user-agent
-                        to get credentials, it's recommanded to specified
-                        the "instance" attribute for Authorizer to be able
-                        to create and manage an array of credentials
-                        granted to each instance.
-          
-                        Otherwise, credentials granted for each instances
-                        will overwrite the previous one's rendering the
-                        previous instance's credentials invalid.
+        };
+        return {
+            /* Verify whether authorization access is granted
+              to any user-agent making API request: All routes
+              on this server are sealed
+            */
+            checker: function (req, res, next) {
+                if (CONFIG.allowedOrigins) {
+                    // Require request origin
+                    if (!req.headers.origin)
+                        return res.status(403).send(HTTP_ERROR_MESSAGES['403']);
+                    // Check headers
+                    var origin_1 = req.headers.origin.replace(/http(s?):\/\//, '');
+                    // regex domain matcher
+                    if (!(new RegExp(CONFIG.allowedOrigins, 'i').test(origin_1)))
+                        return res.status(403).send(HTTP_ERROR_MESSAGES['403']);
+                }
+                if (!req.headers[CONFIG.agentHeader]
+                    || !req.headers[CONFIG.tokenHeader])
+                    return res.status(412).send(HTTP_ERROR_MESSAGES['412']);
+                var _a = req.headers[CONFIG.agentHeader].split('/'), name = _a[0], version = _a[1], url = req.url.replace(/\?(.+)$/, ''), body = ['GET'].includes(req.method) ? req.query : req.body;
+                // Check user-agent
+                if (!name || !version
+                    || !CONFIG.manifest.hasOwnProperty(name)
+                    || CONFIG.manifest[name].version != version)
+                    return res.status(401).send(HTTP_ERROR_MESSAGES['401']);
+                // Check credentials
+                var token = req.headers[CONFIG.tokenHeader];
+                var creds = CONFIG.manifest[name].credentials, index;
+                if (Array.isArray(creds)) {
+                    for (var o = 0; o < creds.length; o++) {
+                        if (creds[o].token == token) {
+                            index = o;
+                            creds = creds[index];
+                            break;
+                        }
+                    }
+                    if (index == undefined)
+                        return res.status(401).send(HTTP_ERROR_MESSAGES['401']);
+                }
+                if (!creds
+                    || !creds.token
+                    || creds.token != token
+                    /* The condition below impose that any user-agent
+                      that get its credentials including expiry date
+                      must setup expiry check-up works in other to auto-
+                      matically renew those credentials before the expire.
+                      Otherwise, Data-provider will bounce their requests
                     */
-                    if (req.body.instance) {
-                        credentials = req.agent.manifest.credentials || [];
-                        if (!Array.isArray(credentials))
-                            credentials = [credentials];
-                        credentials.push(thisCreds);
-                        req.agent.manifest.credentials = credentials;
-                    }
-                    else
-                        req.agent.manifest.credentials = thisCreds;
-                    // console.log( 'updated: ', CONFIG.manifest )
-                    res.status(201)
-                        .json({
-                        error: false,
-                        status: 'AUTHORIZATION::GRANTED',
-                        result: Object.assign({ agent: req.body.agent }, thisCreds)
-                    });
-                    return [2 /*return*/];
-                });
-            }); })
-                // Refresh access credentials to Resources
-                .put('/authorization/refresh', (0, validator_1.checkFormSchema)(refreshCreds), checkAgent, function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-                var creds, index, token, isArrayCreds, o, thisCreds;
-                return __generator(this, function (_a) {
-                    if (!req.agent.manifest.credentials)
-                        return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' })];
-                    creds = req.agent.manifest.credentials;
-                    token = req.body.token, isArrayCreds = Array.isArray(creds);
-                    if (isArrayCreds) {
-                        for (o = 0; o < creds.length; o++) {
-                            if (creds[o].token == token) {
-                                index = o;
-                                creds = creds[index];
-                                break;
-                            }
+                    || (CONFIG.rotateToken && creds.expiry && creds.expiry < Date.now()))
+                    return res.status(401).send(HTTP_ERROR_MESSAGES['401']);
+                // console.log( 'body: ', body, url )
+                // Check allowed APIs
+                // if( !CONFIG.manifest[ name ].scope.endpoints.includes( url ) )
+                //   return res.status(400).send( HTTP_ERROR_MESSAGES['400'] )
+                // console.log( 'body: ', body )
+                // Check allowed datatables for CRUD requests only
+                if (CONFIG.service == 'database'
+                    && !url.includes('/tenant')
+                    && !url.includes('/authorization') // except authorization API requests
+                    && (!body
+                        || !body.table
+                        || !CONFIG.manifest[name].scope.datatables.includes(body.table)))
+                    return res.status(400).send(HTTP_ERROR_MESSAGES['400']);
+                next();
+            },
+            /* Autorization request routers  to be register to
+              the app's routing system like express
+            */
+            routers: function () {
+                return (0, express_1.Router)()
+                    // Grant access credentials to Resources
+                    .post('/authorization/request', (0, validator_1.checkFormSchema)(askCreds), checkAgent, function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+                    var scope, AllowedScopes, o, o, thisCreds, credentials;
+                    return __generator(this, function (_a) {
+                        scope = req.body.scope, AllowedScopes = req.agent.manifest.scope;
+                        if ( // No endpoints scope defined but required
+                        (Array.isArray(AllowedScopes.endpoints)
+                            && AllowedScopes.endpoints.length
+                            && (!Array.isArray(scope.endpoints) || !scope.endpoints.length))
+                            // No table scope defined but required
+                            || CONFIG.service == 'database'
+                                && Array.isArray(AllowedScopes.datatables)
+                                && AllowedScopes.datatables.length
+                                && (!Array.isArray(scope.tables) || !scope.tables.length))
+                            return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Invalid Authorization Scope' })
+                                // Check allowed APIs
+                            ];
+                        // Check allowed APIs
+                        for (o = 0; o < scope.endpoints.length; o++)
+                            if (!AllowedScopes.endpoints.includes(scope.endpoints[o]))
+                                return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Unauthorized Scope API' })
+                                    // Check allowed datatables for CRUD requests only
+                                ];
+                        // Check allowed datatables for CRUD requests only
+                        if (CONFIG.service == 'database')
+                            for (o = 0; o < scope.tables.length; o++)
+                                if (!AllowedScopes.datatables.includes(scope.tables[o]))
+                                    return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Unauthorized Scope Table' })
+                                        // Grant access
+                                    ];
+                        thisCreds = {
+                            token: rand_token_1.default.generate(88),
+                            expiry: Date.now() + (ExpiryDelay * 60 * 1000) // Expire in an hour
+                        };
+                        /* For multi-instance cluster servers or
+                            multiple services using the same user-agent
+                            to get credentials, it's recommanded to specified
+                            the "instance" attribute for Authorizer to be able
+                            to create and manage an array of credentials
+                            granted to each instance.
+              
+                            Otherwise, credentials granted for each instances
+                            will overwrite the previous one's rendering the
+                            previous instance's credentials invalid.
+                        */
+                        if (req.body.instance) {
+                            credentials = req.agent.manifest.credentials || [];
+                            if (!Array.isArray(credentials))
+                                credentials = [credentials];
+                            credentials.push(thisCreds);
+                            req.agent.manifest.credentials = credentials;
                         }
-                        if (index == undefined)
-                            return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' })];
-                    }
-                    if (!creds.token
-                        || !creds.expiry
-                        || token != creds.token)
-                        return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Invalid Credentials' })
-                            // Generate new credentials
-                        ];
-                    thisCreds = {
-                        token: rand_token_1.default.generate(88),
-                        expiry: Date.now() + (ExpiryDelay * 60 * 1000) // Expire in an hour
-                    };
-                    isArrayCreds ?
-                        req.agent.manifest.credentials[index] = thisCreds
-                        : req.agent.manifest.credentials = thisCreds;
-                    // console.log( 'updated: ', CONFIG.manifest )
-                    res.json({
-                        error: false,
-                        status: 'AUTHORIZATION::REFRESHED',
-                        result: Object.assign({ agent: req.body.agent }, thisCreds)
+                        else
+                            req.agent.manifest.credentials = thisCreds;
+                        // console.log( 'updated: ', CONFIG.manifest )
+                        res.status(201)
+                            .json({
+                            error: false,
+                            status: 'AUTHORIZATION::GRANTED',
+                            result: Object.assign({ agent: req.body.agent }, thisCreds)
+                        });
+                        return [2 /*return*/];
                     });
-                    return [2 /*return*/];
-                });
-            }); })
-                // Revoke access credentials to Resources
-                .delete('/authorization/revoke', (0, validator_1.checkFormSchema)(revokeCreds), checkAgent, function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-                var creds, index, token, isArrayCreds, o;
-                return __generator(this, function (_a) {
-                    if (!req.agent.manifest.credentials)
-                        return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' })];
-                    creds = req.agent.manifest.credentials;
-                    token = req.body.token, isArrayCreds = Array.isArray(creds);
-                    if (isArrayCreds) {
-                        for (o = 0; o < creds.length; o++) {
-                            if (creds[o].token == token) {
-                                index = o;
-                                creds = creds[index];
-                                break;
+                }); })
+                    // Refresh access credentials to Resources
+                    .put('/authorization/refresh', (0, validator_1.checkFormSchema)(refreshCreds), checkAgent, function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+                    var creds, index, token, isArrayCreds, o, thisCreds;
+                    return __generator(this, function (_a) {
+                        if (!req.agent.manifest.credentials)
+                            return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' })];
+                        creds = req.agent.manifest.credentials;
+                        token = req.body.token, isArrayCreds = Array.isArray(creds);
+                        if (isArrayCreds) {
+                            for (o = 0; o < creds.length; o++) {
+                                if (creds[o].token == token) {
+                                    index = o;
+                                    creds = creds[index];
+                                    break;
+                                }
                             }
+                            if (index == undefined)
+                                return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' })];
                         }
-                        if (index == undefined)
+                        if (!creds.token
+                            || !creds.expiry
+                            || token != creds.token)
+                            return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Invalid Credentials' })
+                                // Generate new credentials
+                            ];
+                        thisCreds = {
+                            token: rand_token_1.default.generate(88),
+                            expiry: Date.now() + (ExpiryDelay * 60 * 1000) // Expire in an hour
+                        };
+                        isArrayCreds ?
+                            req.agent.manifest.credentials[index] = thisCreds
+                            : req.agent.manifest.credentials = thisCreds;
+                        // console.log( 'updated: ', CONFIG.manifest )
+                        res.json({
+                            error: false,
+                            status: 'AUTHORIZATION::REFRESHED',
+                            result: Object.assign({ agent: req.body.agent }, thisCreds)
+                        });
+                        return [2 /*return*/];
+                    });
+                }); })
+                    // Revoke access credentials to Resources
+                    .delete('/authorization/revoke', (0, validator_1.checkFormSchema)(revokeCreds), checkAgent, function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+                    var creds, index, token, isArrayCreds, o;
+                    return __generator(this, function (_a) {
+                        if (!req.agent.manifest.credentials)
                             return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' })];
-                    }
-                    if (!creds.token
-                        || !creds.expiry
-                        || token != creds.token)
-                        return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Invalid Credentials' })
-                            // Generate new credentials
-                        ];
-                    // Generate new credentials
-                    isArrayCreds ?
-                        req.agent.manifest.credentials.splice(index, 1)
-                        : delete req.agent.manifest.credentials;
-                    // console.log( 'updated: ', CONFIG.manifest )
-                    res.json({
-                        error: false,
-                        status: 'AUTHORIZATION::REVOKED',
-                        result: { agent: req.body.agent }
+                        creds = req.agent.manifest.credentials;
+                        token = req.body.token, isArrayCreds = Array.isArray(creds);
+                        if (isArrayCreds) {
+                            for (o = 0; o < creds.length; o++) {
+                                if (creds[o].token == token) {
+                                    index = o;
+                                    creds = creds[index];
+                                    break;
+                                }
+                            }
+                            if (index == undefined)
+                                return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' })];
+                        }
+                        if (!creds.token
+                            || !creds.expiry
+                            || token != creds.token)
+                            return [2 /*return*/, res.json({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Invalid Credentials' })
+                                // Generate new credentials
+                            ];
+                        // Generate new credentials
+                        isArrayCreds ?
+                            req.agent.manifest.credentials.splice(index, 1)
+                            : delete req.agent.manifest.credentials;
+                        // console.log( 'updated: ', CONFIG.manifest )
+                        res.json({
+                            error: false,
+                            status: 'AUTHORIZATION::REVOKED',
+                            result: { agent: req.body.agent }
+                        });
+                        return [2 /*return*/];
+                    });
+                }); });
+            }
+        };
+    },
+    fastify: function () {
+        var ExpiryDelay = Number(CONFIG.expiry) || 30, // in minute
+        // Assign API Authorizations Manifest
+        checkAgent = function (req, rep) {
+            var agent = req.body.agent, _a = agent.split('/'), name = _a[0], version = _a[1];
+            // Check credentials
+            if (!name || !version
+                || !CONFIG.manifest.hasOwnProperty(name)
+                || CONFIG.manifest[name].version != version)
+                return rep.send({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Unknown User-Agent' });
+            req.agent = { name: name, version: version, manifest: CONFIG.manifest[name] };
+        };
+        return {
+            /* Verify whether authorization access is granted
+              to any user-agent making API request: All routes
+              on this server are sealed
+            */
+            checker: (0, fastify_plugin_1.default)(function (App) { return __awaiter(void 0, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    App
+                        .addHook('onRequest', function (req, rep) {
+                        if (CONFIG.allowedOrigins) {
+                            // Require request origin
+                            if (!req.headers.origin)
+                                return rep.code(403).send(HTTP_ERROR_MESSAGES['403']);
+                            // Check headers
+                            var origin_2 = req.headers.origin.replace(/http(s?):\/\//, '');
+                            // regex domain matcher
+                            if (!(new RegExp(CONFIG.allowedOrigins, 'i').test(origin_2)))
+                                return rep.code(403).send(HTTP_ERROR_MESSAGES['403']);
+                        }
+                        if (!req.headers[CONFIG.agentHeader]
+                            || !req.headers[CONFIG.tokenHeader])
+                            return rep.status(412).send(HTTP_ERROR_MESSAGES['412']);
+                        var _a = req.headers[CONFIG.agentHeader].split('/'), name = _a[0], version = _a[1], url = req.url.replace(/\?(.+)$/, ''), body = (['GET'].includes(req.method) ? req.query : req.body);
+                        // Check user-agent
+                        if (!name || !version
+                            || !CONFIG.manifest.hasOwnProperty(name)
+                            || CONFIG.manifest[name].version != version)
+                            return rep.code(401).send(HTTP_ERROR_MESSAGES['401']);
+                        // Check credentials
+                        var token = req.headers[CONFIG.tokenHeader];
+                        var creds = CONFIG.manifest[name].credentials, index;
+                        if (Array.isArray(creds)) {
+                            for (var o = 0; o < creds.length; o++) {
+                                if (creds[o].token == token) {
+                                    index = o;
+                                    creds = creds[index];
+                                    break;
+                                }
+                            }
+                            if (index == undefined)
+                                return rep.code(401).send(HTTP_ERROR_MESSAGES['401']);
+                        }
+                        if (!creds
+                            || !creds.token
+                            || creds.token != token
+                            /* The condition below impose that any user-agent
+                              that get its credentials including expiry date
+                              must setup expiry check-up works in other to auto-
+                              matically renew those credentials before the expire.
+                              Otherwise, Data-provider will bounce their requests
+                            */
+                            || (CONFIG.rotateToken && creds.expiry && creds.expiry < Date.now()))
+                            return rep.code(401).send(HTTP_ERROR_MESSAGES['401']);
+                        // console.log( 'body: ', body, url )
+                        // Check allowed APIs
+                        // if( !CONFIG.manifest[ name ].scope.endpoints.includes( url ) )
+                        //   return res.status(400).send( HTTP_ERROR_MESSAGES['400'] )
+                        // console.log( 'body: ', body )
+                        // Check allowed datatables for CRUD requests only
+                        if (CONFIG.service == 'database'
+                            && !url.includes('/tenant')
+                            && !url.includes('/authorization') // except authorization API requests
+                            && (!body
+                                || !body.table
+                                || !CONFIG.manifest[name].scope.datatables.includes(body.table)))
+                            return rep.code(400).send(HTTP_ERROR_MESSAGES['400']);
                     });
                     return [2 /*return*/];
                 });
-            }); });
-        }
-    };
-}
+            }); }),
+            /* Autorization request routers  to be register to
+              the app's routing system like express
+            */
+            routers: function (App) { return __awaiter(void 0, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    App
+                        // Grant access credentials to Resources
+                        .post('/authorization/request', __assign(__assign({}, askCredsSchema), { preHandler: [checkAgent] }), function (req, rep) { return __awaiter(void 0, void 0, void 0, function () {
+                        var _a, scope, agent, instance, AllowedScopes, o, o, thisCreds, credentials;
+                        return __generator(this, function (_b) {
+                            if (!req.agent)
+                                return [2 /*return*/, { error: true, status: 'AUTHORIZATION::FAILED', message: 'Unexpected error occured' }];
+                            _a = req.body, scope = _a.scope, agent = _a.agent, instance = _a.instance, AllowedScopes = req.agent.manifest.scope;
+                            if ( // No endpoints scope defined but required
+                            (Array.isArray(AllowedScopes.endpoints)
+                                && AllowedScopes.endpoints.length
+                                && (!Array.isArray(scope.endpoints) || !scope.endpoints.length))
+                                // No table scope defined but required
+                                || CONFIG.service == 'database'
+                                    && Array.isArray(AllowedScopes.datatables)
+                                    && AllowedScopes.datatables.length
+                                    && (!Array.isArray(scope.tables) || !scope.tables.length))
+                                return [2 /*return*/, { error: true, status: 'AUTHORIZATION::DENIED', message: 'Invalid Authorization Scope' }
+                                    // Check allowed APIs
+                                ];
+                            // Check allowed APIs
+                            for (o = 0; o < scope.endpoints.length; o++)
+                                if (!AllowedScopes.endpoints.includes(scope.endpoints[o]))
+                                    return [2 /*return*/, { error: true, status: 'AUTHORIZATION::DENIED', message: 'Unauthorized Scope API' }
+                                        // Check allowed datatables for CRUD requests only
+                                    ];
+                            // Check allowed datatables for CRUD requests only
+                            if (CONFIG.service == 'database')
+                                for (o = 0; o < scope.tables.length; o++)
+                                    if (!AllowedScopes.datatables.includes(scope.tables[o]))
+                                        return [2 /*return*/, { error: true, status: 'AUTHORIZATION::DENIED', message: 'Unauthorized Scope Table' }
+                                            // Grant access
+                                        ];
+                            thisCreds = {
+                                token: rand_token_1.default.generate(88),
+                                expiry: Date.now() + (ExpiryDelay * 60 * 1000) // Expire in an hour
+                            };
+                            /* For multi-instance cluster servers or
+                                multiple services using the same user-agent
+                                to get credentials, it's recommanded to specified
+                                the "instance" attribute for Authorizer to be able
+                                to create and manage an array of credentials
+                                granted to each instance.
+                  
+                                Otherwise, credentials granted for each instances
+                                will overwrite the previous one's rendering the
+                                previous instance's credentials invalid.
+                            */
+                            if (instance) {
+                                credentials = req.agent.manifest.credentials || [];
+                                if (!Array.isArray(credentials))
+                                    credentials = [credentials];
+                                credentials.push(thisCreds);
+                                req.agent.manifest.credentials = credentials;
+                            }
+                            else
+                                req.agent.manifest.credentials = thisCreds;
+                            // console.log( 'updated: ', CONFIG.manifest )
+                            rep.code(201)
+                                .send({
+                                error: false,
+                                status: 'AUTHORIZATION::GRANTED',
+                                result: Object.assign({ agent: agent }, thisCreds)
+                            });
+                            return [2 /*return*/];
+                        });
+                    }); })
+                        // Refresh access credentials to Resources
+                        .put('/authorization/refresh', __assign(__assign({}, refreshCredsSchema), { preHandler: [checkAgent] }), function (req) { return __awaiter(void 0, void 0, void 0, function () {
+                        var creds, index, _a, agent, token, isArrayCreds, o, thisCreds;
+                        return __generator(this, function (_b) {
+                            if (!req.agent)
+                                return [2 /*return*/, { error: true, status: 'AUTHORIZATION::FAILED', message: 'Unexpected error occured' }];
+                            if (!req.agent.manifest.credentials)
+                                return [2 /*return*/, { error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' }];
+                            creds = req.agent.manifest.credentials;
+                            _a = req.body, agent = _a.agent, token = _a.token, isArrayCreds = Array.isArray(creds);
+                            if (isArrayCreds) {
+                                for (o = 0; o < creds.length; o++) {
+                                    if (creds[o].token == token) {
+                                        index = o;
+                                        creds = creds[index];
+                                        break;
+                                    }
+                                }
+                                if (index == undefined)
+                                    return [2 /*return*/, { error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' }];
+                            }
+                            if (!creds.token
+                                || !creds.expiry
+                                || token != creds.token)
+                                return [2 /*return*/, { error: true, status: 'AUTHORIZATION::DENIED', message: 'Invalid Credentials' }
+                                    // Generate new credentials
+                                ];
+                            thisCreds = {
+                                token: rand_token_1.default.generate(88),
+                                expiry: Date.now() + (ExpiryDelay * 60 * 1000) // Expire in an hour
+                            };
+                            isArrayCreds ?
+                                req.agent.manifest.credentials[index] = thisCreds
+                                : req.agent.manifest.credentials = thisCreds;
+                            // console.log( 'updated: ', CONFIG.manifest )
+                            return [2 /*return*/, {
+                                    error: false,
+                                    status: 'AUTHORIZATION::REFRESHED',
+                                    result: Object.assign({ agent: agent }, thisCreds)
+                                }];
+                        });
+                    }); })
+                        // Revoke access credentials to Resources
+                        .delete('/authorization/revoke', __assign(__assign({}, revokeCredsSchema), { preHandler: [checkAgent] }), function (req) { return __awaiter(void 0, void 0, void 0, function () {
+                        var creds, index, _a, agent, token, isArrayCreds, o;
+                        return __generator(this, function (_b) {
+                            if (!req.agent)
+                                return [2 /*return*/, { error: true, status: 'AUTHORIZATION::FAILED', message: 'Unexpected error occured' }];
+                            if (!req.agent.manifest.credentials)
+                                return [2 /*return*/, { error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' }];
+                            creds = req.agent.manifest.credentials;
+                            _a = req.body, agent = _a.agent, token = _a.token, isArrayCreds = Array.isArray(creds);
+                            if (isArrayCreds) {
+                                for (o = 0; o < creds.length; o++) {
+                                    if (creds[o].token == token) {
+                                        index = o;
+                                        creds = creds[index];
+                                        break;
+                                    }
+                                }
+                                if (index == undefined)
+                                    return [2 /*return*/, { error: true, status: 'AUTHORIZATION::DENIED', message: 'Undefined Credentials' }];
+                            }
+                            if (!creds.token
+                                || !creds.expiry
+                                || token != creds.token)
+                                return [2 /*return*/, { error: true, status: 'AUTHORIZATION::DENIED', message: 'Invalid Credentials' }
+                                    // Generate new credentials
+                                ];
+                            // Generate new credentials
+                            isArrayCreds ?
+                                req.agent.manifest.credentials.splice(index, 1)
+                                : delete req.agent.manifest.credentials;
+                            // console.log( 'updated: ', CONFIG.manifest )
+                            return [2 /*return*/, {
+                                    error: false,
+                                    status: 'AUTHORIZATION::REVOKED',
+                                    result: { agent: agent }
+                                }];
+                        });
+                    }); });
+                    return [2 /*return*/];
+                });
+            }); }
+        };
+    }
+};
 module.exports = function (options) {
     if (typeof options != 'object')
         throw new Error('[Authorizer]: Undefined Configuration');
     // Check whether all configuration field are defined
     CONFIG = __assign(__assign({}, (CONFIG || {})), options);
     (0, utils_1.checkConfig)('Authorizer', CONFIG);
-    return init();
+    if (CONFIG.framework && !Object.keys(SUPPORTED_FRAMEWORKS).includes(CONFIG.framework))
+        throw new Error('[Authorizer]: Unsupported Nodejs Framework');
+    // Run by nodejs framework: expressjs by default
+    return SUPPORTED_FRAMEWORKS[(CONFIG.framework || 'express')]();
 };

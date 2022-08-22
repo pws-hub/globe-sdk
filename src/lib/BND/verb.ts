@@ -1,8 +1,8 @@
 
 import request from 'request'
-import { Config } from './types'
+import type { BNDConfig } from '../../types/bnd'
 
-export default ( config: Config ) => {
+export default ( config: BNDConfig ) => {
   return ( verb: string, method: string, body: any ) => {
     return new Promise( ( resolve, reject ) => {
   

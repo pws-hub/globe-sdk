@@ -12,7 +12,7 @@ var checkConfig = function (type, config) {
     switch (type) {
         case 'Authorizer':
             requiredFields = ['service', 'manifest', 'agentHeader', 'tokenHeader'];
-            break; // 'expiry', 'rotateToken', 'allowedOrigins'
+            break; // 'framework', 'expiry', 'rotateToken', 'allowedOrigins'
         case 'APS':
             requiredFields = ['baseURL', 'provider'];
             break;

@@ -21,9 +21,11 @@
 */
 import { URL } from 'url'
 import request from 'request'
-import type { Config } from './types'
+import FPlugin from 'fastify-plugin'
+import { FastifyInstance, FastifyRequest, FastifyPluginAsync } from 'fastify'
+import type { MDPConfig } from '../../types/mdp'
 
-let CONFIG: Config
+let CONFIG: MDPConfig
 
 const
 isEmpty = ( entry: any ) => {
@@ -327,7 +329,7 @@ class DSInterface {
   private tenant: Tenant
   [index: string]: any
 
-  constructor( config: Config ){
+  constructor( config: MDPConfig ){
     CONFIG = { ...(CONFIG || {}), ...config }
     
     this.collections = ( Array.isArray( config.collections ) && config.collections ) || Object.values( arguments )
@@ -360,10 +362,9 @@ class DSInterface {
     return this
   }
 
-  async middleware( req: any, res: any, next: any ){
+  private middleware( req: FastifyRequest | any ){
     // Assign each collection as Query Object to DSInterface
     const origin = getOrigin( req )
-    // console.log('origin: ', origin )
 
     Array.isArray( this.collections )
     && this.collections.map( each => {
@@ -387,9 +388,20 @@ class DSInterface {
 
       DSInterface.prototype[ each ] = query
     } )
-
+  }
+  
+  async express( req: any, res: any, next: any ){
+    this.middleware( req )
     req.dp = this
     next()
+  }
+
+  async fastify(){
+    return FPlugin( async ( App: FastifyInstance ) => {
+      App
+      .addHook( 'onRequest', this.middleware )
+      .decorate( 'dp', this as any )
+    } ) as FastifyPluginAsync
   }
 }
 

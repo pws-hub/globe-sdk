@@ -1,8 +1,8 @@
 
 import request from 'request'
-import { Config } from './types'
+import type { CSAConfig } from '../../types/csa'
 
-export default ( config: Config ) => {
+export default ( config: CSAConfig ) => {
   return ( verb: string, method: string, body: any ) => {
     return new Promise( ( resolve, reject ) => {
   
