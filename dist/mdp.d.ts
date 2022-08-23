@@ -1,5 +1,5 @@
 
-export type MDPConfig = {
+export declare type MDPConfig = {
   host: string
   userAgent: string
   accessToken: string

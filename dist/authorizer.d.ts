@@ -1,7 +1,7 @@
 
 import { FastifyRequest } from 'fastify'
 
-export type AuthorizerConfig = {
+export declare type AuthorizerConfig = {
   manifest: { [index: string]: any }
   allowedOrigins: string
   agentHeader: string

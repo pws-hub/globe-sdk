@@ -436,15 +436,19 @@ requestErrorSchema = {
     fastify: function () {
         var ExpiryDelay = Number(CONFIG.expiry) || 30, // in minute
         // Assign API Authorizations Manifest
-        checkAgent = function (req, rep) {
-            var agent = req.body.agent, _a = agent.split('/'), name = _a[0], version = _a[1];
-            // Check credentials
-            if (!name || !version
-                || !CONFIG.manifest.hasOwnProperty(name)
-                || CONFIG.manifest[name].version != version)
-                return rep.send({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Unknown User-Agent' });
-            req.agent = { name: name, version: version, manifest: CONFIG.manifest[name] };
-        };
+        checkAgent = function (req, rep) { return __awaiter(void 0, void 0, void 0, function () {
+            var agent, _a, name, version;
+            return __generator(this, function (_b) {
+                agent = req.body.agent, _a = agent.split('/'), name = _a[0], version = _a[1];
+                // Check credentials
+                if (!name || !version
+                    || !CONFIG.manifest.hasOwnProperty(name)
+                    || CONFIG.manifest[name].version != version)
+                    return [2 /*return*/, rep.send({ error: true, status: 'AUTHORIZATION::DENIED', message: 'Unknown User-Agent' })];
+                req.agent = { name: name, version: version, manifest: CONFIG.manifest[name] };
+                return [2 /*return*/];
+            });
+        }); };
         return {
             /* Verify whether authorization access is granted
               to any user-agent making API request: All routes
