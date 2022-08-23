@@ -3,7 +3,7 @@
   "version": "1.0.14",
   "description": "Globe Ecosystem SDK",
   "main": "./dist/index.js",
-  "types": "./src/index.d.ts",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist/"
   ],
@@ -17,7 +17,7 @@
   "author": "Fabrice Marlboro",
   "private": false,
   "scripts": {
-    "compile": "rimraf ./dist && tsc",
+    "compile": "rimraf ./dist && tsc && cp ./src/types/** ./dist",
     "prepack": "yarn run compile",
     "test:all": "yarn compile && mocha test",
     "test:wps:connect": "yarn compile && mocha test/wps.connect.test",
