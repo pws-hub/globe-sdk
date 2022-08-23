@@ -118,8 +118,9 @@ requestErrorSchema = {
                 instance: { type: 'boolean' },
                 scope: {
                     type: 'object',
-                    patternProperties: {
-                        '^.*$': { type: ['string'] }
+                    properties: {
+                        endpoints: { type: 'array', items: { type: 'string' } },
+                        tables: { type: 'array', items: { type: 'string' } }
                     }
                 }
             }

@@ -464,7 +464,7 @@ SUPPORTED_FRAMEWORKS = {
       */
       checker: FastifyPlugin( async ( App: FastifyInstance ) => {
         App
-        .addHook( 'onRequest', ( req: DecoratedRequest, rep: FastifyReply ) => {
+        .addHook( 'preHandler', async ( req: DecoratedRequest, rep: FastifyReply ) => {
           
           if( CONFIG.allowedOrigins ){
             // Require request origin
