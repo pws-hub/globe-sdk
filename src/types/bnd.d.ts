@@ -1,5 +1,5 @@
 
-export type BNDConfig = {
+export declare type BNDConfig = {
   host: string
   server: string
   userAgent: string

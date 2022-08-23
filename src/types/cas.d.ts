@@ -9,7 +9,7 @@ export type Space = {
   host: string
 }
 
-export type CASConfig = {
+export declare type CASConfig = {
   accessKey: string
   secret: string
   compressKey: string

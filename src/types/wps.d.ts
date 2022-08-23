@@ -1,5 +1,5 @@
 
-export type WPSConfig = {
+export declare type WPSConfig = {
   server: string
   host: string
   userAgent: string

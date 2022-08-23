@@ -1,5 +1,5 @@
 
-export type CSAConfig = {
+export declare type CSAConfig = {
   baseURL: string
   accessToken: string
   headers: any

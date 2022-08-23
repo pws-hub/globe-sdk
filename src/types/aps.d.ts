@@ -1,5 +1,5 @@
 
-export type APSConfig = {
+export declare type APSConfig = {
   userAgent: string
   provider: string
   baseURL: string

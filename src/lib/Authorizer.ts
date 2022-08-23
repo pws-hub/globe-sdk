@@ -442,7 +442,7 @@ SUPPORTED_FRAMEWORKS = {
 
     const ExpiryDelay = Number( CONFIG.expiry ) || 30, // in minute
     // Assign API Authorizations Manifest
-    checkAgent = ( req: DecoratedRequest, rep: FastifyReply ) => {
+    checkAgent = async ( req: DecoratedRequest, rep: FastifyReply ) => {
       const 
       { agent }: any = req.body,
       [ name, version ] = agent.split('/')
