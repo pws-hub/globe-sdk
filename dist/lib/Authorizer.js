@@ -458,65 +458,78 @@ requestErrorSchema = {
             checker: (0, fastify_plugin_1.default)(function (App) { return __awaiter(void 0, void 0, void 0, function () {
                 return __generator(this, function (_a) {
                     App
-                        .addHook('onRequest', function (req, rep) {
-                        if (CONFIG.allowedOrigins) {
-                            // Require request origin
-                            if (!req.headers.origin)
-                                return rep.code(403).send(HTTP_ERROR_MESSAGES['403']);
-                            // Check headers
-                            var origin_2 = req.headers.origin.replace(/http(s?):\/\//, '');
-                            // regex domain matcher
-                            if (!(new RegExp(CONFIG.allowedOrigins, 'i').test(origin_2)))
-                                return rep.code(403).send(HTTP_ERROR_MESSAGES['403']);
-                        }
-                        if (!req.headers[CONFIG.agentHeader]
-                            || !req.headers[CONFIG.tokenHeader])
-                            return rep.status(412).send(HTTP_ERROR_MESSAGES['412']);
-                        var _a = req.headers[CONFIG.agentHeader].split('/'), name = _a[0], version = _a[1], url = req.url.replace(/\?(.+)$/, ''), body = (['GET'].includes(req.method) ? req.query : req.body);
-                        // Check user-agent
-                        if (!name || !version
-                            || !CONFIG.manifest.hasOwnProperty(name)
-                            || CONFIG.manifest[name].version != version)
-                            return rep.code(401).send(HTTP_ERROR_MESSAGES['401']);
-                        // Check credentials
-                        var token = req.headers[CONFIG.tokenHeader];
-                        var creds = CONFIG.manifest[name].credentials, index;
-                        if (Array.isArray(creds)) {
-                            for (var o = 0; o < creds.length; o++) {
-                                if (creds[o].token == token) {
-                                    index = o;
-                                    creds = creds[index];
-                                    break;
-                                }
+                        .addHook('preHandler', function (req, rep) { return __awaiter(void 0, void 0, void 0, function () {
+                        var origin_2, _a, name, version, url, body, token, creds, index, o;
+                        return __generator(this, function (_b) {
+                            if (CONFIG.allowedOrigins) {
+                                // Require request origin
+                                if (!req.headers.origin)
+                                    return [2 /*return*/, rep.code(403).send(HTTP_ERROR_MESSAGES['403'])
+                                        // Check headers
+                                    ];
+                                origin_2 = req.headers.origin.replace(/http(s?):\/\//, '');
+                                // regex domain matcher
+                                if (!(new RegExp(CONFIG.allowedOrigins, 'i').test(origin_2)))
+                                    return [2 /*return*/, rep.code(403).send(HTTP_ERROR_MESSAGES['403'])];
                             }
-                            if (index == undefined)
-                                return rep.code(401).send(HTTP_ERROR_MESSAGES['401']);
-                        }
-                        if (!creds
-                            || !creds.token
-                            || creds.token != token
-                            /* The condition below impose that any user-agent
-                              that get its credentials including expiry date
-                              must setup expiry check-up works in other to auto-
-                              matically renew those credentials before the expire.
-                              Otherwise, Data-provider will bounce their requests
-                            */
-                            || (CONFIG.rotateToken && creds.expiry && creds.expiry < Date.now()))
-                            return rep.code(401).send(HTTP_ERROR_MESSAGES['401']);
-                        // console.log( 'body: ', body, url )
-                        // Check allowed APIs
-                        // if( !CONFIG.manifest[ name ].scope.endpoints.includes( url ) )
-                        //   return res.status(400).send( HTTP_ERROR_MESSAGES['400'] )
-                        // console.log( 'body: ', body )
-                        // Check allowed datatables for CRUD requests only
-                        if (CONFIG.service == 'database'
-                            && !url.includes('/tenant')
-                            && !url.includes('/authorization') // except authorization API requests
-                            && (!body
-                                || !body.table
-                                || !CONFIG.manifest[name].scope.datatables.includes(body.table)))
-                            return rep.code(400).send(HTTP_ERROR_MESSAGES['400']);
-                    });
+                            if (!req.headers[CONFIG.agentHeader]
+                                || !req.headers[CONFIG.tokenHeader])
+                                return [2 /*return*/, rep.status(412).send(HTTP_ERROR_MESSAGES['412'])];
+                            _a = req.headers[CONFIG.agentHeader].split('/'), name = _a[0], version = _a[1], url = req.url.replace(/\?(.+)$/, ''), body = (['GET'].includes(req.method) ? req.query : req.body);
+                            // Check user-agent
+                            if (!name || !version
+                                || !CONFIG.manifest.hasOwnProperty(name)
+                                || CONFIG.manifest[name].version != version)
+                                return [2 /*return*/, rep.code(401).send(HTTP_ERROR_MESSAGES['401'])
+                                    // Check credentials
+                                ];
+                            token = req.headers[CONFIG.tokenHeader];
+                            creds = CONFIG.manifest[name].credentials;
+                            if (Array.isArray(creds)) {
+                                for (o = 0; o < creds.length; o++) {
+                                    if (creds[o].token == token) {
+                                        index = o;
+                                        creds = creds[index];
+                                        break;
+                                    }
+                                }
+                                if (index == undefined)
+                                    return [2 /*return*/, rep.code(401).send(HTTP_ERROR_MESSAGES['401'])];
+                            }
+                            if (!creds
+                                || !creds.token
+                                || creds.token != token
+                                /* The condition below impose that any user-agent
+                                  that get its credentials including expiry date
+                                  must setup expiry check-up works in other to auto-
+                                  matically renew those credentials before the expire.
+                                  Otherwise, Data-provider will bounce their requests
+                                */
+                                || (CONFIG.rotateToken && creds.expiry && creds.expiry < Date.now()))
+                                return [2 /*return*/, rep.code(401).send(HTTP_ERROR_MESSAGES['401'])
+                                    // console.log( 'body: ', body, url )
+                                    // Check allowed APIs
+                                    // if( !CONFIG.manifest[ name ].scope.endpoints.includes( url ) )
+                                    //   return res.status(400).send( HTTP_ERROR_MESSAGES['400'] )
+                                    // console.log( 'body: ', body )
+                                    // Check allowed datatables for CRUD requests only
+                                ];
+                            // console.log( 'body: ', body, url )
+                            // Check allowed APIs
+                            // if( !CONFIG.manifest[ name ].scope.endpoints.includes( url ) )
+                            //   return res.status(400).send( HTTP_ERROR_MESSAGES['400'] )
+                            // console.log( 'body: ', body )
+                            // Check allowed datatables for CRUD requests only
+                            if (CONFIG.service == 'database'
+                                && !url.includes('/tenant')
+                                && !url.includes('/authorization') // except authorization API requests
+                                && (!body
+                                    || !body.table
+                                    || !CONFIG.manifest[name].scope.datatables.includes(body.table)))
+                                return [2 /*return*/, rep.code(400).send(HTTP_ERROR_MESSAGES['400'])];
+                            return [2 /*return*/];
+                        });
+                    }); });
                     return [2 /*return*/];
                 });
             }); }),
