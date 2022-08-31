@@ -409,32 +409,37 @@ var DSInterface = /** @class */ (function () {
         return this;
     };
     DSInterface.prototype.middleware = function (req) {
-        // Assign each collection as Query Object to DSInterface
-        var origin = getOrigin(req);
-        Array.isArray(this.collections)
-            && this.collections.map(function (each) {
-                var query = new Query(each);
-                // Request Host is use as tenant ID
-                query.activeTenant = origin.replace('auth.', '');
-                /** Give another tenant's ID to DP Query as bribe
-                  to overwite the request origin. Expecially designed
-                  to facilitate Share-Session
-          
-                  WARNING: Using this the wrong way could create
-                  data accessibility bridge between tenant sessions.
-                */
-                query.corrupt = function (tenantId) {
-                    query.bribe = tenantId;
-                    return query;
-                };
-                DSInterface.prototype[each] = query;
+        return __awaiter(this, void 0, void 0, function () {
+            var origin;
+            return __generator(this, function (_a) {
+                origin = getOrigin(req);
+                Array.isArray(this.collections)
+                    && this.collections.map(function (each) {
+                        var query = new Query(each);
+                        // Request Host is use as tenant ID
+                        query.activeTenant = origin.replace('auth.', '');
+                        /** Give another tenant's ID to DP Query as bribe
+                          to overwite the request origin. Expecially designed
+                          to facilitate Share-Session
+                  
+                          WARNING: Using this the wrong way could create
+                          data accessibility bridge between tenant sessions.
+                        */
+                        query.corrupt = function (tenantId) {
+                            query.bribe = tenantId;
+                            return query;
+                        };
+                        DSInterface.prototype[each] = query;
+                    });
+                req.dp = this;
+                return [2 /*return*/];
             });
+        });
     };
     DSInterface.prototype.express = function (req, res, next) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 this.middleware(req);
-                req.dp = this;
                 next();
                 return [2 /*return*/];
             });
@@ -446,9 +451,7 @@ var DSInterface = /** @class */ (function () {
             return __generator(this, function (_a) {
                 return [2 /*return*/, (0, fastify_plugin_1.default)(function (App) { return __awaiter(_this, void 0, void 0, function () {
                         return __generator(this, function (_a) {
-                            App
-                                .addHook('onRequest', this.middleware)
-                                .decorate('dp', this);
+                            App.addHook('onRequest', this.middleware);
                             return [2 /*return*/];
                         });
                     }); })];

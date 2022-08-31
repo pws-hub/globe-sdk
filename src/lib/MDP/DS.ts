@@ -362,7 +362,7 @@ class DSInterface {
     return this
   }
 
-  private middleware( req: FastifyRequest | any ){
+  private async middleware( req: FastifyRequest | any ){
     // Assign each collection as Query Object to DSInterface
     const origin = getOrigin( req )
 

@@ -35,6 +35,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 /** Data-Provider Interface/Driver
 
@@ -54,6 +57,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 */
 var mongodb_1 = require("mongodb");
 var utils_1 = require("../../utils");
+var fastify_plugin_1 = __importDefault(require("fastify-plugin"));
 var STypes = ['one', 'many', 'all'], isEmpty = function (entry) {
     // test empty array or object
     if (!entry || typeof entry !== 'object')
@@ -556,7 +560,7 @@ function dbConnect(config) {
                         && collections.map(function (each) { return api[each] = new Query(each, dbClient); });
                     return api;
                 },
-                middleware: function (req, res, next) { return __awaiter(_this, void 0, void 0, function () {
+                express: function (req, res, next) { return __awaiter(_this, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         // Assign each collection as Query Object to DBInterface
                         Array.isArray(collections)
@@ -565,7 +569,24 @@ function dbConnect(config) {
                         next();
                         return [2 /*return*/];
                     });
-                }); }
+                }); },
+                fastify: function () {
+                    return (0, fastify_plugin_1.default)(function (App) { return __awaiter(_this, void 0, void 0, function () {
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            App.addHook('onRequest', function (req) { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    // Assign each collection as Query Object to DBInterface
+                                    Array.isArray(collections)
+                                        && collections.map(function (each) { return api[each] = new Query(each, dbClient); });
+                                    req.dp = api;
+                                    return [2 /*return*/];
+                                });
+                            }); });
+                            return [2 /*return*/];
+                        });
+                    }); });
+                }
             });
         });
     });
