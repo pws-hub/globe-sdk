@@ -11,3 +11,9 @@ export declare type BNDConfig = {
 declare global {
   var Globe_BNDConfig: BNDConfig
 }
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    bnd: any
+  }
+}

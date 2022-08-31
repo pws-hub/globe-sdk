@@ -1,4 +1,5 @@
-
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
+import FPlugin from 'fastify-plugin'
 import transport from './wrappers/Transport'
 import template from './wrappers/Template'
 import registry from './wrappers/Registry'
@@ -42,11 +43,19 @@ function config( config: BNDConfig ){
 
       return true
     },
-    middleware: ( req: any, res: any, next: any ) => {
+    express: ( req: any, res: any, next: any ) => {
       if( typeof req != 'object' || !req.url ) return
       req.bnd = api
 
       next()
+    },
+    fastify: () => {
+      return FPlugin( async ( App: FastifyInstance ) => {
+        App.addHook( 'onRequest', req => {
+          if( typeof req != 'object' || !req.url ) return
+          req.bnd = api
+        })
+      } ) as FastifyPluginAsync
     }
   })
 }
