@@ -24,7 +24,7 @@ declare global {
 }
 
 declare module 'fastify' {
-  interface FastifyInstance {
+  interface FastifyRequest {
     dp: any
   }
 }

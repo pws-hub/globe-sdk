@@ -18,6 +18,8 @@
 import { ObjectId } from 'mongodb'
 import { toCapitalCase } from '../../utils'
 import type { MDPConfig, Process, AnyObject } from '../../types/mdp'
+import { FastifyInstance, FastifyPluginAsync } from 'fastify'
+import FPlugin from 'fastify-plugin'
 
 const
 STypes = [ 'one', 'many', 'all' ],
@@ -427,13 +429,24 @@ function dbConnect( config: MDPConfig ){
 
                       return api
                     },
-                    middleware: async ( req: any, res: any, next: any ) => {
+                    express: async ( req: any, res: any, next: any ) => {
                       // Assign each collection as Query Object to DBInterface
                       Array.isArray( collections )
                       && collections.map( each => api[ each ] = new Query( each, dbClient ) )
 
                       req.dp = api
                       next()
+                    },
+                    fastify: () => {
+                      return FPlugin( async ( App: FastifyInstance ) => {
+                        App.addHook( 'onRequest', async req => {
+                          // Assign each collection as Query Object to DBInterface
+                          Array.isArray( collections )
+                          && collections.map( each => api[ each ] = new Query( each, dbClient ) )
+
+                          req.dp = api
+                        } )
+                      } ) as FastifyPluginAsync
                     }
                 })
             } )
