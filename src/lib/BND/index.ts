@@ -25,39 +25,39 @@ function config( config: BNDConfig ){
   }
 
   global.Globe_BNDConfig = config
+
   const
   verb = Verb( config ),
   api = {
     send: send( verb ),
     registry: registry( verb ),
     template: template( verb ),
-    transport: transport( verb )
-  }
+    transport: transport( verb ),
 
-  return Object.assign( api, {
-
-    setConfig( fields: any ){
+    setConfig: ( fields: any ) => {
       if( typeof fields != 'object' ) return false
       // Update existing configuration
       Object.assign( config, fields )
 
       return true
     },
-    express: ( req: any, res: any, next: any ) => {
+    express: async ( req: any, res: any, next: any ) => {
       if( typeof req != 'object' || !req.url ) return
       req.bnd = api
 
       next()
     },
-    fastify: () => {
+    fastify: async () => {
       return FPlugin( async ( App: FastifyInstance ) => {
-        App.addHook( 'onRequest', req => {
+        App.addHook( 'onRequest', async req => {
           if( typeof req != 'object' || !req.url ) return
           req.bnd = api
-        })
+        } )
       } ) as FastifyPluginAsync
     }
-  })
+  }
+
+  return api
 }
 
 export { config }

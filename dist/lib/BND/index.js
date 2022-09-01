@@ -66,9 +66,7 @@ function config(config) {
         send: (0, Sender_1.default)(verb),
         registry: (0, Registry_1.default)(verb),
         template: (0, Template_1.default)(verb),
-        transport: (0, Transport_1.default)(verb)
-    };
-    return Object.assign(api, {
+        transport: (0, Transport_1.default)(verb),
         setConfig: function (fields) {
             if (typeof fields != 'object')
                 return false;
@@ -76,24 +74,35 @@ function config(config) {
             Object.assign(config, fields);
             return true;
         },
-        express: function (req, res, next) {
-            if (typeof req != 'object' || !req.url)
-                return;
-            req.bnd = api;
-            next();
-        },
-        fastify: function () {
-            return (0, fastify_plugin_1.default)(function (App) { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    App.addHook('onRequest', function (req) {
-                        if (typeof req != 'object' || !req.url)
-                            return;
-                        req.bnd = api;
-                    });
+        express: function (req, res, next) { return __awaiter(_this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                if (typeof req != 'object' || !req.url)
                     return [2 /*return*/];
-                });
-            }); });
-        }
-    });
+                req.bnd = api;
+                next();
+                return [2 /*return*/];
+            });
+        }); },
+        fastify: function () { return __awaiter(_this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, (0, fastify_plugin_1.default)(function (App) { return __awaiter(_this, void 0, void 0, function () {
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            App.addHook('onRequest', function (req) { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    if (typeof req != 'object' || !req.url)
+                                        return [2 /*return*/];
+                                    req.bnd = api;
+                                    return [2 /*return*/];
+                                });
+                            }); });
+                            return [2 /*return*/];
+                        });
+                    }); })];
+            });
+        }); }
+    };
+    return api;
 }
 exports.config = config;
