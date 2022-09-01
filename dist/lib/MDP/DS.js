@@ -451,7 +451,7 @@ var DSInterface = /** @class */ (function () {
             return __generator(this, function (_a) {
                 return [2 /*return*/, (0, fastify_plugin_1.default)(function (App) { return __awaiter(_this, void 0, void 0, function () {
                         return __generator(this, function (_a) {
-                            App.addHook('onRequest', this.middleware);
+                            App.addHook('onRequest', this.middleware.bind(this));
                             return [2 /*return*/];
                         });
                     }); })];

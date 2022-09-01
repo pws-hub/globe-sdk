@@ -336,7 +336,7 @@ class DSInterface {
     this.tenant = new Tenant()
   }
 
-  dp(){
+  dp( this: this ){
     // Assign each collection as Query Object to DSInterface
     Array.isArray( this.collections )
     && this.collections.map( each => {
@@ -399,7 +399,7 @@ class DSInterface {
 
   async fastify(){
     return FPlugin( async ( App: FastifyInstance ) => {
-      App.addHook( 'onRequest', this.middleware )
+      App.addHook( 'onRequest', this.middleware.bind(this) )
     } ) as FastifyPluginAsync
   }
 }
