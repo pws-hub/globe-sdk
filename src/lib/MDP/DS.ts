@@ -392,12 +392,12 @@ class DSInterface {
     req.dp = this
   }
   
-  async express( req: any, res: any, next: any ){
+  express( req: any, res: any, next: any ){
     this.middleware( req )
     next()
   }
 
-  async fastify(){
+  fastify(){
     return FPlugin( async ( App: FastifyInstance ) => {
       App.addHook( 'onRequest', this.middleware.bind(this) )
     } ) as FastifyPluginAsync

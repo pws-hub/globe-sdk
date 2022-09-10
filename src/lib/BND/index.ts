@@ -32,8 +32,12 @@ function config( config: BNDConfig ){
     send: send( verb ),
     registry: registry( verb ),
     template: template( verb ),
-    transport: transport( verb ),
-
+    transport: transport( verb )
+  }
+  
+  return {
+    ...api,
+    
     setConfig: ( fields: any ) => {
       if( typeof fields != 'object' ) return false
       // Update existing configuration
@@ -41,13 +45,13 @@ function config( config: BNDConfig ){
 
       return true
     },
-    express: async ( req: any, res: any, next: any ) => {
+    express: ( req: any, res: any, next: any ) => {
       if( typeof req != 'object' || !req.url ) return
       req.bnd = api
 
       next()
     },
-    fastify: async () => {
+    fastify: () => {
       return FPlugin( async ( App: FastifyInstance ) => {
         App.addHook( 'onRequest', async req => {
           if( typeof req != 'object' || !req.url ) return
@@ -56,8 +60,6 @@ function config( config: BNDConfig ){
       } ) as FastifyPluginAsync
     }
   }
-
-  return api
 }
 
 export { config }
