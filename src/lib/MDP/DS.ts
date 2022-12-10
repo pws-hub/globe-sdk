@@ -351,7 +351,6 @@ class DSInterface {
         data accessibility bridge between tenant sessions.
       */
       query.corrupt = ( tenantId: string ) => {
-
         query.bribe = tenantId
         return query
       }
@@ -381,7 +380,6 @@ class DSInterface {
         data accessibility bridge between tenant sessions.
       */
       query.corrupt = ( tenantId: string ) => {
-
         query.bribe = tenantId
         return query
       }

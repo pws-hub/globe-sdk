@@ -446,7 +446,7 @@ function Init(){
                   requested find is not found.
         */
         || !prefixRegex.test( path )
-        || !/\.[a-z0-9]{3,6}$/.test( path ) ) // Known application files extensions
+        || !/\.[a-z0-9]{3,8}$/.test( path ) ) // Known application files extensions
       return next()
 
     let [ _, region ] = path.match( prefixRegex ) || []
