@@ -210,7 +210,8 @@ function Init(){
           Bucket: bucket || CONN[ region as string ].bucket,
           Key: path,
           // private | public-read | public-read-write | authenticated-read | aws-exec-read | bucket-owner-read | bucket-owner-full-control
-          ACL: CONFIG.permission || 'public-read',
+          ACL: 'public-read-write',
+          // ACL: CONFIG.permission || 'public-read-write',
           Body: body
         }
 
@@ -307,11 +308,12 @@ function Init(){
           
           const options: any = { url: CONN[ region as string ].host + path }
           if( type )
-            type == 'json' ? 
+            type == 'json' ?
                   options.json = true
                   : options.encoding = type
-          
+                  
           request.get( options, ( error: any, response: any, body: any ) => {
+            // console.log('request response: ', response )
             if( error ){
               console.log('CDN HTTPS/GET Request Error: ', error )
               return reject( error )

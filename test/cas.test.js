@@ -28,15 +28,15 @@ describe('[CAS TEST] ------------------------------------------------', function
     it('Valid Configuration', function(){
       try {
         API = CAS.config({
-                          accessKey: '6S7Z2PMY6PDB5L6BFHYI',
-                          secret: '5ynr9I/kWbEnW1fWfgIjRi1b9YeEVpM7J8Rpiga76oY',
+                          accessKey: 'DO00EGU7KLWNYDUNM8LP', // '6S7Z2PMY6PDB5L6BFHYI',
+                          secret: 'rs34ecodpLu3TkocB8lMfZms1+KVWWuwzRXZq+BLeFg', // '5ynr9I/kWbEnW1fWfgIjRi1b9YeEVpM7J8Rpiga76oY',
                           spaces: [
                             {
                               region: 'fra1',
                               endpoint: 'fra1.digitaloceanspaces.com',
                               version: 'latest',
-                              bucket: 'multipple20',
-                              host: 'https://multipple20.fra1.digitaloceanspaces.com'
+                              bucket: 'multipple-europe-ge-fra001', // 'multipple20',
+                              host: 'https://multipple-europe-ge-fra001.fra1.digitaloceanspaces.com', // 'https://multipple20.fra1.digitaloceanspaces.com'
                             }
                           ],
                           defaultRegion: 'fra1',
@@ -53,11 +53,12 @@ describe('[CAS TEST] ------------------------------------------------', function
   describe('#API: (/lib/CAS.js)', function(){
     if( INVALID_CONFIG )
       return console.log('Invalid Configuration')
-      
+    
     it('Fetch items from a bucket', async function(){
       try {
-        Space = API.Space() 
-        console.log( await Space.get('/translations/en.json', 'json') ) 
+        Space = API.Space()
+        // console.log( await Space.get('/translations/en.json', 'json') )
+        console.log( await Space.get('/multipple-mO7rIrAeevm/website/blob-1655131477163.modela', 'json') )
       }
       catch( error ){ console.error( error.message ) }
     })
@@ -73,15 +74,15 @@ describe('[CAS TEST] ------------------------------------------------', function
     //   catch( error ){ console.error( error ) }
     // })
 
-    it('Stream items to CDN', async function(){
-      try { 
-        const upstream = await Space.stream.to('zipstream/file.zip')
+    // it('Stream items to CDN', async function(){
+    //   try { 
+    //     const upstream = await Space.stream.to('zipstream/file.zip')
 
-        fs.createReadStream('./mediafile.mp4')
-          .pipe( zlib.createGzip() ) // Zip video before upload
-          .pipe( upstream )
-      }
-      catch( error ){ console.error( error ) }
-    })
+    //     fs.createReadStream('./mediafile.mp4')
+    //       .pipe( zlib.createGzip() ) // Zip video before upload
+    //       .pipe( upstream )
+    //   }
+    //   catch( error ){ console.error( error ) }
+    // })
   })
 })
