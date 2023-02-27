@@ -398,7 +398,7 @@ class DSInterface {
   }
   
   express( req: any, res: any, next: any ){
-    this.middleware( req )
+    this.middleware.bind(this)( req )
     next()
   }
 
