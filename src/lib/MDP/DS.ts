@@ -274,36 +274,43 @@ class Tenant {
     try { origin = CONFIG.host || await getAddress() as string }
     catch( error ){}
 
-    request( `${CONFIG.server}/tenant/${action}`,
-            {
-              method: method,
-              headers: {
-                'origin': origin,
-                'cache-control': 'no-cache',
-                'mdp-user-agent': CONFIG.userAgent,
-                'mdp-access-token': CONFIG.accessToken
-              },
-              body: payload,
-              json: true, 
-              timeout: 8000
-            },
-            ( error, response, body ) => {
+    const options: any = {
+      method: method,
+      headers: {
+        'origin': origin,
+        'cache-control': 'no-cache',
+        'mdp-user-agent': CONFIG.userAgent,
+        'mdp-access-token': CONFIG.accessToken
+      },
+      json: true, 
+      timeout: 8000
+    }
 
-              // Normal request error
-              if( error ) return callback( error )
-                // String response returned: Usually 400, 401, 403 errors
-              if( typeof body == 'string' ) return callback( body )
-              // Requested process error
-              if( body.error ) return callback( body.message )
+    if( payload ) options.body = payload
 
-              callback( false, body.result !== undefined ? body.result : body.message )
-            } )
+    request(`${CONFIG.server}/tenant/${action}`, options, ( error, response, body ) => {
+      // Normal request error
+      if( error ) return callback( error )
+        // String response returned: Usually 400, 401, 403 errors
+      if( typeof body == 'string' ) return callback( body )
+      // Requested process error
+      if( body.error ) return callback( body.message )
+
+      callback( false, body.result !== undefined ? body.result : body.message )
+    } )
   }
 
   add( data: any ){
     return new Promise( ( resolve, reject ) => {
       this.exec('add',
                 'POST', data,
+                ( error, result ) => error ? reject( error ) : resolve( result ) )
+    } )
+  }
+  list(){
+    return new Promise( ( resolve, reject ) => {
+      this.exec('list', 
+                'GET', null,
                 ( error, result ) => error ? reject( error ) : resolve( result ) )
     } )
   }

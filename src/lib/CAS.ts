@@ -210,8 +210,8 @@ function Init(){
           Bucket: bucket || CONN[ region as string ].bucket,
           Key: path,
           // private | public-read | public-read-write | authenticated-read | aws-exec-read | bucket-owner-read | bucket-owner-full-control
-          ACL: 'public-read-write',
-          // ACL: CONFIG.permission || 'public-read-write',
+          ACL: 'public-read',
+          // ACL: CONFIG.permission || 'public-read',
           Body: body
         }
 
