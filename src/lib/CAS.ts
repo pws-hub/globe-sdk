@@ -244,12 +244,11 @@ function Init(){
         
         // Write raw file to CDN Storage
         fs.readFile( path, ( error, resultData ) => {
+          if( error ) return reject( error )
 
-            if( error ) return reject( error )
-
-            write( filepath, resultData )
-                .then( link => resolve( link ) )
-                .catch( error => reject( error ) )
+          write( filepath, resultData )
+              .then( link => resolve( link ) )
+              .catch( error => reject( error ) )
         })
       } )
     }
@@ -387,7 +386,8 @@ function Init(){
           const
           options = {
             Bucket: CONN[ region as string ].bucket, 
-            Key: path
+            Key: path,
+            ACL: 'public-read',
           },
           /** Instantiate the S3Upstream class to upload
            * 
