@@ -322,7 +322,11 @@ class Query {
       // Proceed to Special operators setup
       const superOps: AnyObject = {}
 
-      if( upsert || returnUpdate ){
+      if( upsert || returnUpdate || arrayFilters ){
+        // Auto-create new document if there's none to update
+        if( upsert ) superOps.upsert = true
+        if( arrayFilters ) superOps.arrayFilters = arrayFilters
+
         // About returning the update value of this document
         if( returnUpdate ){
           superOps.returnDocument = 'after'
@@ -339,10 +343,6 @@ class Query {
           const { value } = await this.DBCollection.findOneAndUpdate( conditions, toUpdate, superOps )
           return value
         }
-
-        // Auto-create new document if there's none to update
-        if( upsert ) superOps.upsert = true
-        if( arrayFilters ) superOps.arrayFilters = arrayFilters
 
         result = await this.DBCollection[ fn ]( conditions, toUpdate, superOps )
       }
