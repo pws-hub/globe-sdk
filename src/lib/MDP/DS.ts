@@ -248,7 +248,6 @@ class Query {
 
   // Massive aggregation pipeline
   async aggregate( stages: any ){
-
     return new Promise( ( resolve, reject ) => {
 
       if( !stages || typeof stages != 'object' )
@@ -256,6 +255,15 @@ class Query {
 
       this.exec( '/query/aggregate',
                   'POST', { table: this.table, stages },
+                  ( error, result ) => error ? reject( error ) : resolve( result ) )
+    } )
+  }
+
+  // Drop collection
+  async drop(){
+    return new Promise( ( resolve, reject ) => {
+      this.exec( '/query/drop',
+                  'POST', { table: this.table },
                   ( error, result ) => error ? reject( error ) : resolve( result ) )
     } )
   }

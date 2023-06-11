@@ -399,6 +399,14 @@ class Query {
       throw new Error('- '+ error )
     }
   }
+  // Drop collection
+  async drop(){
+    try { return await this.DBCollection.drop() ? 'Dropped' : 'Not Dropped' }
+    catch( error ){
+      console.error( 'Drop Collection Query: ', error )
+      throw new Error('- '+ error )
+    }
+  }
 }
 
 function dbConnect( config: MDPConfig ){
