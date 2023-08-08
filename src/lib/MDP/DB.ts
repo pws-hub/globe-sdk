@@ -389,7 +389,6 @@ class Query {
 
   // Massive aggregation pipeline
   async aggregate( stages: any ){
-
     if( !stages || typeof stages != 'object' )
       throw new Error('Invalid Aggregation Stage Argument')
 
@@ -399,6 +398,7 @@ class Query {
       throw new Error('- '+ error )
     }
   }
+
   // Drop collection
   async drop(){
     try { return await this.DBCollection.drop() ? 'Dropped' : 'Not Dropped' }
@@ -437,13 +437,15 @@ function dbConnect( config: MDPConfig ){
 
                       return api
                     },
-                    express: async ( req: any, res: any, next: any ) => {
-                      // Assign each collection as Query Object to DBInterface
-                      Array.isArray( collections )
-                      && collections.map( each => api[ each ] = new Query( each, dbClient ) )
+                    express: () => {
+                      return async ( req: any, res: any, next: any ) => {
+                        // Assign each collection as Query Object to DBInterface
+                        Array.isArray( collections )
+                        && collections.map( each => api[ each ] = new Query( each, dbClient ) )
 
-                      req.dp = api
-                      next()
+                        req.dp = api
+                        next()
+                      }
                     },
                     fastify: () => {
                       return FPlugin( async ( App: FastifyInstance ) => {
@@ -457,7 +459,7 @@ function dbConnect( config: MDPConfig ){
                       } ) as FastifyPluginAsync
                     }
                 })
-            } )
+              } )
   } )
 }
 

@@ -338,8 +338,11 @@ class Tenant {
   }
 }
 
-class DSInterface {
+function setPrototype<T extends Function, K extends keyof T['prototype']>( classHandler: T, method: K, queryObject: Query ){
+  classHandler.prototype[ method ] = queryObject
+}
 
+class DSInterface {
   private collections: string[]
   private tenant: Tenant
   [index: string]: any
@@ -385,7 +388,7 @@ class DSInterface {
 
       const query = new Query( each )
       // Request Host is use as tenant ID
-      query.activeTenant = origin.replace('auth.','')
+      query.activeTenant = origin.replace('auth.', '')
 
       /** Give another tenant's ID to DP Query as bribe
         to overwite the request origin. Expecially designed
@@ -399,15 +402,18 @@ class DSInterface {
         return query
       }
 
-      DSInterface.prototype[ each ] = query
+      // DSInterface.prototype[ each ] = query
+      setPrototype( DSInterface, each, query )
     } )
 
     req.dp = this
   }
   
-  express( req: any, res: any, next: any ){
-    this.middleware.bind(this)( req )
-    next()
+  express(){
+    return ( req: any, res: any, next: any ) => {
+      this.middleware.bind(this)( req )
+      next()
+    }
   }
 
   fastify(){
