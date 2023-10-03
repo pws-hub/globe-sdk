@@ -42,3 +42,5 @@ export const config = ( config: CSAConfig ) => {
     }
   })
 }
+
+export default { config }

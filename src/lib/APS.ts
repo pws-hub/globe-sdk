@@ -74,3 +74,5 @@ export const signout = async ( ctoken: string, deviceId: string ) => {
   try { return await To( 'signout', 'GET', false, { 'X-Auth-Token': ctoken, 'X-Auth-Device': deviceId } ) }
   catch( error ){ return { error: true, status: 'AUTH::FAILED', message: 'Unexpected Error Occured' } }
 }
+
+export default { config, signout }

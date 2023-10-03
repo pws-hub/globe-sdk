@@ -720,7 +720,7 @@ SUPPORTED_FRAMEWORKS = {
   }
 }
 
-module.exports = ( options: AuthorizerConfig ) => {
+export default ( options: AuthorizerConfig ) => {
   
   if( typeof options != 'object' )
     throw new Error('[Authorizer]: Undefined Configuration')

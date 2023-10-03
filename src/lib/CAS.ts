@@ -48,7 +48,7 @@ let
 CONFIG: CASConfig,
 CONN: { [index: string]: S3Connection } = {}
 
-class S3Downstream extends Readable {
+export class S3Downstream extends Readable {
   
   S3: S3 // AWS.S3 instance
   __currentCursorPosition = 0 // Holds the current starting position for our range queries
@@ -502,3 +502,5 @@ export const config = ( options: CASConfig ) => {
   // Initialize
   return Init()
 }
+
+export default { config }

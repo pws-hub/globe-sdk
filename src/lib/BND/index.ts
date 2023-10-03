@@ -62,4 +62,4 @@ function config( config: BNDConfig ){
   }
 }
 
-export { config }
+export default { config }

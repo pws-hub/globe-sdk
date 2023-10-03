@@ -27,3 +27,5 @@ export const config = ( type: string, options: MDPConfig ) => {
     default: return DBInterface( options )
   }
 }
+
+export default { config }

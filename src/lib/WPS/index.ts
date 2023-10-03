@@ -34,4 +34,4 @@ const setConfig = ( config: WPSConfig ) => {
   return true
 }
 
-export { config, setConfig, connect, api }
+export default { config, setConfig, connect, api }
