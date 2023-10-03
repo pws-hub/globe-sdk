@@ -5,7 +5,7 @@ export declare type MDPConfig = {
   accessToken: string
   server: string
   collections: string[]
-  dbServer?: string
+  dbServer: string
   dbName?: string
 }
 

@@ -15,7 +15,7 @@
     - DATABASE_URL = Connection String (URL) of the mongodb database
     - DATABASE_NAME = Name of targeted database
 */
-import { ObjectId } from 'mongodb'
+import { MongoClient, Db, ObjectId } from 'mongodb'
 import { toCapitalCase } from '../../utils'
 import type { MDPConfig, Process, AnyObject } from '../../types/mdp'
 import { FastifyInstance, FastifyPluginAsync } from 'fastify'
@@ -167,6 +167,13 @@ extendData = async ( dbClient: any, result: any, options: any, index = 0 ): Prom
     return await extendData( dbClient, result, options, index + 1 )
 
   return { error: process.error, final: result }
+}
+
+export interface DB {
+  collections: string[]
+  dp: () => AnyObject
+  express: () => ( req: any, res: any, next: any ) => Promise<void>
+  fastify: () => FastifyPluginAsync
 }
 
 class Query {
@@ -409,58 +416,57 @@ class Query {
   }
 }
 
-function dbConnect( config: MDPConfig ){
+function dbConnect( config: MDPConfig ): Promise<DB>{
   return new Promise( ( resolve, reject ) => {
 
     let { dbServer, dbName, collections } = config
 
-    require('mongodb')
-    .MongoClient
-    .connect( dbServer, { useNewUrlParser: true, useUnifiedTopology: true },
-              ( error: any, client: any ) => {
-                // On connection error we display then exit
-                if( error ){
-                  reject('Error connecting to MongoDB: '+ error )
-                  return
-                }
+    function getInterface( db: Db ){
+      
+    }
 
-                const
-                dbClient = client.db( dbName ),
-                api: AnyObject = {}
+    MongoClient.connect( dbServer, ( error, client ) => {
+      // On connection error we display then exit
+      if( error || !client )
+        return reject('Error connecting to MongoDB: '+ error )
+      
+      const
+      db = client.db( dbName ),
+      api: AnyObject = {}
 
-                resolve({
-                    collections,
-                    dp: () => {
-                      // Assign each collection as Query Object to DBInterface
-                      Array.isArray( collections )
-                      && collections.map( each => api[ each ] = new Query( each, dbClient ) )
+      resolve({
+        collections,
+        dp: () => {
+          // Assign each collection as Query Object to DBInterface
+          Array.isArray( collections )
+          && collections.map( each => api[ each ] = new Query( each, db ) )
 
-                      return api
-                    },
-                    express: () => {
-                      return async ( req: any, res: any, next: any ) => {
-                        // Assign each collection as Query Object to DBInterface
-                        Array.isArray( collections )
-                        && collections.map( each => api[ each ] = new Query( each, dbClient ) )
+          return api
+        },
+        express: () => {
+          return async ( req: any, res: any, next: any ) => {
+            // Assign each collection as Query Object to DBInterface
+            Array.isArray( collections )
+            && collections.map( each => api[ each ] = new Query( each, db ) )
 
-                        req.dp = api
-                        next()
-                      }
-                    },
-                    fastify: () => {
-                      return FPlugin( async ( App: FastifyInstance ) => {
-                        App.addHook( 'onRequest', async req => {
-                          // Assign each collection as Query Object to DBInterface
-                          Array.isArray( collections )
-                          && collections.map( each => api[ each ] = new Query( each, dbClient ) )
+            req.dp = api
+            next()
+          }
+        },
+        fastify: () => {
+          return FPlugin( async ( App: FastifyInstance ) => {
+            App.addHook( 'onRequest', async req => {
+              // Assign each collection as Query Object to DBInterface
+              Array.isArray( collections )
+              && collections.map( each => api[ each ] = new Query( each, db ) )
 
-                          req.dp = api
-                        } )
-                      } ) as FastifyPluginAsync
-                    }
-                })
-              } )
-  } )
+              req.dp = api
+            } )
+          } ) as FastifyPluginAsync
+        }
+      })
+    })
+  })
 }
 
 export default ( config: MDPConfig ) => dbConnect( config )

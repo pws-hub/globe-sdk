@@ -8,12 +8,6 @@
     "dist/",
     "src/"
   ],
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    }
-  },
   "author": "Fabrice Marlboro",
   "private": false,
   "scripts": {
