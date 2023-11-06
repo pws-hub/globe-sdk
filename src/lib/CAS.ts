@@ -228,7 +228,7 @@ function Init(){
                           +( options.extension || '.'+( options.mime ? options.mime.split('/')[1] : 'jpg' ) )
 
         // Only image file compression is supported for now
-        if( options.mime.includes('image') ){
+        if( tinify.key && options.mime.includes('image') ){
           tinify.fromFile( path )
                 .preserve( 'copyright', 'creation' )
                 .toBuffer( ( error, resultData ) => {
