@@ -482,7 +482,7 @@ function Init(){
       return onError('[CAS]: Invalid space region')
     
     // console.log( 'out:', `${CONN[ region ].host}/${path}` )
-    req.pipe( request(`${CONN[ region ].host}/${path}`).on( 'error', onError ) )
+    req.pipe( request(`${CONN[ region ].host}/${encodeURI( path )}`).on( 'error', onError ) )
         .pipe( res )
   }
   
